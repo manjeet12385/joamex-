@@ -1,0 +1,629 @@
+/* Style for Ants & Bed Bugs Service Page */
+.bridal-makeup-page-wrapper {
+    background-color: #ffffff;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1f2937;
+    scroll-behavior: smooth;
+}
+
+.bridal-makeup-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    gap: 32px;
+    position: relative;
+}
+
+/* Top Header & Video Section */
+.living-top-header-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+}
+
+.living-header-info {
+    flex: 1;
+    max-width: 380px;
+}
+
+.living-main-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+}
+
+.living-header-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.earliest-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    width: fit-content;
+}
+
+.earliest-badge .badge-dot {
+    color: #059669;
+    font-size: 8px;
+}
+
+.earliest-badge .badge-label {
+    color: #047857;
+    font-weight: 600;
+}
+
+.earliest-badge .badge-time {
+    color: #065f46;
+    font-weight: 800;
+}
+
+.living-rating-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    color: #334155;
+    margin-bottom: 16px;
+}
+
+.living-rating-box .star-icon {
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.living-rating-box .rating-val {
+    font-weight: 700;
+}
+
+.living-rating-box .bookings-val {
+    color: #64748b;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.view-services-purple-btn {
+    background: #6366f1;
+    color: #ffffff;
+    border: none;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.view-services-purple-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+}
+
+/* Video Showcase Card */
+.full-home-video-card {
+    flex: 1;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: -95px;
+    height: 380px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background: #0f172a;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.video-poster-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    opacity: 1;
+}
+
+.video-text-subtitle {
+    position: absolute;
+    bottom: 36px;
+    left: 24px;
+    right: 24px;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.video-play-btn-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: rgba(15, 23, 42, 0.75);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.video-play-btn-center:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+    background: rgba(15, 23, 42, 0.9);
+}
+
+.video-play-btn-center svg {
+    fill: #ffffff;
+    width: 24px;
+    height: 24px;
+    margin-left: 3px;
+}
+
+.video-progress-bar {
+    position: absolute;
+    bottom: 16px;
+    left: 20px;
+    right: 20px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.video-progress-fill {
+    width: 40%;
+    height: 100%;
+    background: #ffffff;
+}
+
+/* Left Sidebar - Service Selection */
+.services-sidebar {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    height: fit-content;
+    position: sticky;
+    top: 24px;
+}
+
+.sidebar-heading {
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    padding-left: 4px;
+}
+
+.subcategory-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.subcategory-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    width: 100%;
+}
+
+.subcategory-card:hover {
+    background: #f8fafc;
+}
+
+.subcategory-card.active {
+    background: #ffffff;
+    border-color: #0f172a;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.subcat-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subcat-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.subcat-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+    line-height: 1.25;
+}
+
+.subcategory-card.active .subcat-name {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+/* Center Content Area */
+.services-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.category-block {
+    scroll-margin-top: 24px;
+}
+
+.category-block-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.packages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.package-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f1f5f9;
+    gap: 20px;
+}
+
+.package-card:last-child {
+    border-bottom: none;
+}
+
+.package-info {
+    flex: 1;
+}
+
+.package-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.package-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.package-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.package-rating .star {
+    color: #6366f1;
+}
+
+.package-price-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.package-bullets {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.package-bullets li {
+    font-size: 13px;
+    color: #64748b;
+    position: relative;
+    padding-left: 14px;
+    line-height: 1.4;
+}
+
+.package-bullets li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #94a3b8;
+}
+
+.view-details-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6366f1;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.view-details-link:hover {
+    text-decoration: underline;
+}
+
+.package-image-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.package-img-wrapper {
+    width: 140px;
+    height: 110px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: -16px;
+    z-index: 1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.package-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.qty-btn {
+    position: relative;
+    z-index: 2;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #6366f1;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+}
+
+.qty-btn:hover {
+    border-color: #6366f1;
+    background: #f8fafc;
+}
+
+/* Right Sidebar - UC Promise */
+.right-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.uc-promise-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.promise-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 16px;
+}
+
+.promise-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.promise-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.promise-icon {
+    color: #10b981;
+}
+
+.quality-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+}
+
+/* Sticky Bottom Cart Bar */
+.sticky-cart-bar {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #6366f1;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+    z-index: 100;
+    font-weight: 700;
+}
+
+.view-cart-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* GLOBAL RESPONSIVE OVERFLOW CONTROL */
+html, body, .bridal-makeup-page-wrapper {
+    overflow-x: clip !important;
+    max-width: 100vw !important;
+}
+
+/* RESPONSIVE DESIGN FOR TABLETS & MOBILES (width <= 960px) */
+@media (max-width: 960px) {
+    .bridal-makeup-container {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 16px 12px !important;
+        box-sizing: border-box !important;
+        gap: 20px !important;
+    }
+
+    .living-top-header-section {
+        flex-direction: column-reverse !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+        padding: 16px 12px 0 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .living-header-info {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .full-home-video-card {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 240px !important;
+        max-height: 240px !important;
+        border-radius: 12px !important;
+    }
+
+    .video-text-subtitle {
+        font-size: 16px !important;
+        bottom: 14px !important;
+        left: 14px !important;
+        right: 14px !important;
+    }
+
+    .services-sidebar, .makeup-left-sidebar {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 0 !important;
+        top: 60px !important;
+        position: sticky !important;
+        z-index: 40 !important;
+        background: #ffffff !important;
+        border-radius: 12px !important;
+        padding: 10px 12px !important;
+        box-sizing: border-box !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    }
+
+    .subcategory-grid, .sidebar-grid {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 4px 0 !important;
+        scrollbar-width: none !important;
+    }
+
+    .subcategory-grid::-webkit-scrollbar, .sidebar-grid::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .subcategory-card, .sidebar-grid-item {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 90px !important;
+        max-width: 120px !important;
+        padding: 6px 10px !important;
+        white-space: nowrap !important;
+    }
+
+    .packages-list-container, .service-section-container, .bridal-packages-section {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .package-card, .service-card, .bridal-package-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .makeup-right-sidebar {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}

@@ -1,0 +1,243 @@
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  color-scheme: light;
+}
+
+html, body {
+  color-scheme: light !important;
+}
+
+body {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Global input fields styling: Ensure pure white background and dark text for customer pages */
+input, textarea, select {
+  background-color: #ffffff;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Light Theme Search Bar Rules */
+.search-bar, .header-search {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+}
+
+.search-bar input, .header-search input {
+  background-color: transparent !important;
+  color: #0f172a !important;
+  color-scheme: light !important;
+}
+
+.search-bar input::placeholder, .header-search input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Hide video play icons and progress bars across all service banners */
+.video-play-btn-center,
+.video-play-btn,
+.video-progress-bar {
+  display: none !important;
+}
+
+/* URBAN COMPANY DUAL FLOATING CAROUSEL ARROWS */
+.uc-arrow-left,
+.uc-arrow-right {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 45;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #000000 !important;
+  outline: none;
+}
+
+.uc-arrow-left {
+  left: -18px;
+}
+
+.uc-arrow-right {
+  right: -18px;
+}
+
+.uc-arrow-left:hover,
+.uc-arrow-right:hover {
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.uc-arrow-left:active,
+.uc-arrow-right:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+@media (max-width: 640px) {
+  .uc-arrow-left {
+    left: 4px;
+    width: 34px;
+    height: 34px;
+  }
+  .uc-arrow-right {
+    right: 4px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* GLOBAL STICKY SIDEBAR FOR ALL SERVICE PAGES */
+.services-sidebar,
+.makeup-left-sidebar,
+.left-sticky-sidebar-column,
+.services-sidebar-sticky-col {
+  position: sticky !important;
+  top: 80px !important;
+  z-index: 30 !important;
+  height: fit-content !important;
+  align-self: flex-start !important;
+}
+
+/* URBAN COMPANY (IMAGE 2) ACCURATE POSITIONING FOR ADD BUTTON & QUANTITY COUNTER */
+.package-title-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+}
+
+.package-visual-right, .package-image-side {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  height: auto !important;
+  min-height: auto !important;
+  margin-bottom: 0 !important;
+}
+
+.add-to-cart-action-btn {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  background: #ffffff !important;
+  color: #6366f1 !important;
+  border: 1.5px solid #6366f1 !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  padding: 6px 22px !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap !important;
+  z-index: 10 !important;
+  margin-top: 8px !important;
+}
+
+.add-to-cart-action-btn:hover {
+  background: #f5f3ff !important;
+  border-color: #4f46e5 !important;
+  color: #4f46e5 !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+.quantity-adjuster-btn, .qty-btn-container {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  background: #ffffff !important;
+  border: 1.5px solid #6366f1 !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 92px !important;
+  height: 34px !important;
+  padding: 0 2px !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
+  margin-top: 8px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.qty-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #6366f1 !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  width: 28px !important;
+  height: 100% !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  border-radius: 4px !important;
+  transition: background 0.15s ease !important;
+  outline: none !important;
+}
+
+.qty-btn:hover {
+  background: #f5f3ff !important;
+  color: #4f46e5 !important;
+}
+
+.quantity-adjuster-btn span,
+.qty-btn-container span {
+  flex: 1 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+

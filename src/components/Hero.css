@@ -1,0 +1,1334 @@
+.hero {
+  width: 100%;
+  padding: 0;
+  background: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+.hero-container {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 40px;
+  box-sizing: border-box;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.25;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+
+.hero-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* LEFT SIDE - Promotional Banner */
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.promo-banner {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.promo-image {
+  position: relative;
+  height: 320px;
+  background: linear-gradient(135deg, #a8d5ba 0%, #7fb89a 100%);
+  overflow: hidden;
+}
+
+.promo-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.25) 60%, transparent 100%);
+  z-index: 1;
+}
+
+.promo-image img {
+  width: 133.33%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  left: -33.33%;
+  top: 0;
+  opacity: 0.9;
+}
+
+.promo-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: #ff6b6b;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
+}
+
+.promo-text {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  right: 20px;
+  color: white;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.promo-text h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  line-height: 1.2;
+}
+
+.promo-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #fbbf24;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.promo-offer {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 2px 0 0 0;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: inline-block;
+  align-self: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.worker-image,
+.service-illustration {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  height: auto;
+  min-height: 200px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.worker-image img,
+.service-illustration img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* RIGHT SIDE - Service Categories */
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-header {
+  background: #fff;
+  padding: 20px 20px 16px 20px;
+  font-weight: 600;
+  font-size: 18px;
+  color: #333;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* SERVICES GRID - 2 Horizontal Rows */
+.hero-service-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px 4px;
+  flex: 1;
+  background: #fff;
+  padding: 16px 12px;
+}
+
+.service-box {
+  background: transparent;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  border-radius: 0;
+  border: none;
+  min-height: auto;
+  box-shadow: none;
+}
+
+.service-box:hover {
+  transform: translateY(-3px);
+  background: transparent;
+}
+
+.service-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.service-category-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.service-box:hover .service-icon {
+  transform: scale(1.1);
+}
+
+.service-box p {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #333;
+  margin: 0;
+}
+
+
+
+
+/* MODAL OVERLAY */
+/* MODAL OVERLAY */
+.hero-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-modal-content {
+  background: #fff;
+  border-radius: 20px;
+  padding: 0;
+  position: relative;
+  width: 90%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-modal-content input,
+.hero-modal-content select,
+.hero-modal-content textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  color-scheme: light !important;
+}
+
+.hero-modal-content input:focus,
+.hero-modal-content select:focus,
+.hero-modal-content textarea:focus {
+  border-color: #3b82f6 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hero-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: #666;
+  font-weight: 300;
+  line-height: 1;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hero-modal-close:hover {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: #fff;
+  transform: rotate(90deg) scale(1.15);
+  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5);
+}
+
+.hero-modal-back {
+  display: none;
+}
+
+
+.hero-modal-content h3 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a1a1a;
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  background-clip: unset;
+  margin: 0;
+  padding: 28px 40px 20px 28px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.hero-modal-content h3::after {
+  display: none;
+}
+
+.hero-sections-container {
+  padding: 0 24px 24px 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.hero-section {
+  margin-bottom: 24px;
+}
+
+.hero-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 16px 0 12px 0;
+  padding-left: 8px;
+  text-align: left;
+}
+
+.hero-sections-container .hero-subcategory-grid {
+  padding: 0;
+  overflow-y: visible;
+}
+
+.hero-subcategory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  align-items: start;
+}
+
+.hero-subcategory-card {
+  background: transparent;
+  padding: 12px 8px 14px 8px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-subcategory-card::before {
+  display: none;
+}
+
+.hero-subcategory-card:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: none;
+}
+
+.hero-subcategory-card:hover .hero-subcategory-icon {
+  transform: scale(1.08);
+}
+
+.hero-subcategory-icon {
+  font-size: 36px;
+  width: 88px;
+  height: 88px;
+  margin-bottom: 0;
+  transition: all 0.2s ease;
+  filter: none;
+  overflow: hidden;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f5f5f5;
+}
+
+.hero-subcategory-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.hero-subcategory-card p {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+/* Scrollbar styling */
+.hero-subcategory-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hero-subcategory-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.hero-subcategory-grid::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.hero-subcategory-grid::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* STATS */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  background: #fff;
+  padding: 0 20px 20px 20px;
+}
+
+.stat-box {
+  background: transparent;
+  padding: 12px 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.stat-box::before {
+  display: none;
+}
+
+.stat-box:hover {
+  transform: translateY(-2px);
+  box-shadow: none;
+}
+
+.stat-box h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0;
+  color: #64748b;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* RESPONSIVE */
+@media (max-width: 968px) {
+  .hero-left {
+    display: none;
+  }
+
+  .hero-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-service-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-container {
+    padding: 12px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.4px;
+    margin-bottom: 16px;
+  }
+
+  .promo-image {
+    height: 240px;
+  }
+
+  .promo-text h2 {
+    font-size: 22px;
+  }
+
+  .promo-subtitle {
+    font-size: 36px;
+  }
+
+  .promo-offer {
+    font-size: 14px;
+  }
+
+  .bottom-grid {
+    height: 140px;
+  }
+
+  .worker-image,
+  .service-illustration {
+    height: 140px;
+  }
+
+  .search-header {
+    display: none;
+  }
+
+  .hero-service-grid {
+    display: grid;
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: 28%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 16px 20px;
+    padding: 20px 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .hero-service-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .service-box {
+    scroll-snap-align: start;
+    min-width: 80px;
+    padding: 10px 6px;
+  }
+
+  .service-icon {
+    width: 76px;
+    height: 76px;
+    margin-bottom: 8px;
+  }
+
+  .service-box p {
+    font-size: 11px;
+    white-space: normal;
+  }
+
+  .stat-box h3 {
+    font-size: 24px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  /* Mobile Modal Overrides */
+  .hero-subcategory-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .hero-subcategory-card {
+    padding: 10px;
+  }
+  
+  .hero-subcategory-icon {
+    height: 80px;
+    margin-bottom: 8px;
+  }
+  
+  .hero-subcategory-card p {
+    font-size: 12px;
+  }
+  
+  .hero-modal-content h3 {
+    font-size: 20px;
+    padding: 60px 20px 15px 20px;
+  }
+}
+
+/* PREFERENCE MODAL STEP STYLING */
+.hero-modal-back-btn {
+  position: absolute;
+  top: 26px;
+  left: 24px;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: transform 0.2s ease;
+}
+
+.hero-modal-content h3.has-back-btn {
+  padding-left: 60px;
+}
+
+.hero-modal-back-btn:hover {
+  transform: translateX(-3px);
+}
+
+.hero-preferences-list {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+  gap: 16px;
+}
+
+.hero-preference-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hero-preference-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.preference-img-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.preference-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preference-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.preference-details h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.preference-subtitle {
+  font-size: 12px;
+  color: #059669;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.preference-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.preference-tag {
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.preference-arrow {
+  font-size: 20px;
+  color: #9ca3af;
+  font-weight: 300;
+}
+
+.hero-preference-banner {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.hero-preference-banner img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+/* =========================================================
+   JUSTDIAL HERO SECTION: SLIDER (LEFT) + 4 CARDS (RIGHT)
+   ========================================================= */
+.justdial-hero-wrapper {
+  display: flex !important;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* LEFT SIDE MAIN SLIDER CAROUSEL */
+.hero-left-slider-box {
+  flex: 1;
+  min-width: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #0f172a;
+}
+
+.justdial-main-carousel {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.justdial-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+  cursor: pointer;
+  transform: scale(1.03);
+}
+
+.justdial-slide.active {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+.justdial-slide img {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.slide-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.85) 100%);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.slide-top-badge {
+  align-self: flex-start;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.8px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.slide-content-text {
+  color: #ffffff;
+}
+
+.slide-content-text h2 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.slide-subtext {
+  font-size: 14px;
+  color: #e2e8f0;
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+.slide-offer-tag {
+  display: inline-block;
+  background: rgba(37, 99, 235, 0.9);
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+/* CAROUSEL CONTROLS */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 25;
+  background: rgba(15, 23, 42, 0.45);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.carousel-arrow:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-arrow.prev {
+  left: 8px;
+}
+
+.carousel-arrow.next {
+  right: 8px;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  right: 20px;
+  z-index: 25;
+  display: flex;
+  gap: 6px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.carousel-dot.active {
+  width: 24px;
+  border-radius: 10px;
+  background: #2563eb;
+}
+
+/* RIGHT SIDE: 2 VERTICAL CARDS (ARRANGED SIDE-BY-SIDE) */
+.justdial-4cards-grid {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.justdial-vertical-card {
+  position: relative;
+  background: #0f172a;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 340px;
+}
+
+.justdial-vertical-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(37, 99, 235, 0.25);
+  border-color: #2563eb;
+}
+
+.jd-card-image-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.jd-card-image-box img {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  transition: transform 0.5s ease;
+}
+
+.jd-card-image-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.88) 100%);
+  pointer-events: none;
+}
+
+.justdial-vertical-card:hover .jd-card-image-box img {
+  transform: scale(1.08);
+}
+
+.jd-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  z-index: 5;
+}
+
+.jd-card-details {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: transparent;
+  z-index: 5;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.jd-card-details h4 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.jd-card-details p {
+  font-size: 12px;
+  color: #cbd5e1;
+  margin: 0 0 10px 0;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.jd-book-btn {
+  display: inline-block;
+  background: rgba(37, 99, 235, 0.95);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+  width: fit-content;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: gap 0.2s;
+}
+
+.justdial-vertical-card:hover .jd-book-btn {
+  gap: 8px;
+  color: #1d4ed8;
+}
+
+/* =========================================================
+   RESPONSIVE BREAKPOINTS (DESKTOP, LAPTOP, TABLET, MOBILE)
+   ========================================================= */
+
+/* 1. Large Laptops / Desktops (1200px - 1440px) */
+@media (max-width: 1366px) {
+  .justdial-main-carousel {
+    height: 310px;
+  }
+
+  .justdial-vertical-card {
+    height: 310px;
+  }
+
+  .jd-card-image-box {
+    height: 165px;
+  }
+
+  .slide-content-text h2 {
+    font-size: 22px;
+  }
+}
+
+/* 2. Medium Laptops (992px - 1199px) */
+@media (max-width: 1199px) {
+  .justdial-hero-wrapper {
+    gap: 12px;
+  }
+
+  .hero-left-slider-box {
+    flex: 1.2;
+  }
+
+  .justdial-main-carousel {
+    height: 280px;
+  }
+
+  .justdial-vertical-card {
+    height: 280px;
+  }
+
+  .jd-card-image-box {
+    height: 150px;
+  }
+
+  .jd-card-details {
+    padding: 8px;
+  }
+
+  .jd-card-details h4 {
+    font-size: 11px;
+  }
+
+  .jd-card-details p {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  .jd-book-btn {
+    font-size: 10px;
+  }
+
+  .slide-content-text h2 {
+    font-size: 20px;
+  }
+}
+
+/* 3. Tablets (768px - 991px) */
+@media (max-width: 991px) {
+  .justdial-hero-wrapper {
+    flex-direction: row !important;
+    gap: 12px;
+  }
+
+  .hero-left-slider-box {
+    flex: 1;
+  }
+
+  .justdial-main-carousel {
+    height: 240px;
+  }
+
+  .justdial-4cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .justdial-vertical-card {
+    height: 240px;
+  }
+
+  .jd-card-image-box {
+    height: 135px;
+  }
+
+  .jd-card-details {
+    padding: 8px;
+  }
+
+  .jd-card-details h4 {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .jd-card-details p {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+
+  .jd-book-btn {
+    font-size: 10px;
+  }
+
+  .slide-content-text h2 {
+    font-size: 18px;
+  }
+}
+
+/* 4. Small Mobile Screens (<= 767px) */
+@media (max-width: 767px) {
+  .justdial-hero-wrapper {
+    flex-direction: row !important;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .hero-left-slider-box {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .justdial-main-carousel {
+    height: 210px;
+  }
+
+  .slide-top-badge {
+    font-size: 9px;
+    padding: 4px 10px;
+  }
+
+  .slide-content-text h2 {
+    font-size: 15px;
+    margin-bottom: 3px;
+  }
+
+  .slide-subtext {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .slide-offer-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+  }
+
+  .carousel-arrow {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .justdial-4cards-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .justdial-vertical-card {
+    height: 210px;
+    border-radius: 12px;
+  }
+
+  .jd-card-image-box {
+    height: 120px;
+  }
+
+  .jd-card-badge {
+    font-size: 8px;
+    padding: 3px 6px;
+    top: 5px;
+    left: 5px;
+  }
+
+  .jd-card-details {
+    padding: 6px 8px;
+  }
+
+  .jd-card-details h4 {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }
+
+  .jd-card-details p {
+    font-size: 9.5px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .jd-book-btn {
+    font-size: 10px;
+  }
+}
+
+/* ONLY PHOTO / NO TEXT MODE OVERRIDES */
+.justdial-slide.only-photo::after {
+  display: none !important;
+}
+
+.justdial-slide.only-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 12px;
+}
+
+.justdial-vertical-card.only-photo {
+  padding: 0 !important;
+  border: none !important;
+}
+
+.justdial-vertical-card.only-photo .jd-card-image-box {
+  height: 100% !important;
+  max-height: 100% !important;
+  border-radius: 12px !important;
+}
+
+.justdial-vertical-card.only-photo .jd-card-image-box::after {
+  display: none !important;
+}
+
+.justdial-vertical-card.only-photo .jd-card-image-box img {
+  border-radius: 12px !important;
+}
