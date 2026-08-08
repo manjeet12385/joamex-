@@ -1174,7 +1174,7 @@
   }
 
   .justdial-4cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
 
@@ -1255,13 +1255,13 @@
   .justdial-4cards-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
     min-width: 0;
   }
 
   .justdial-vertical-card {
-    height: 210px;
+    height: 180px;
     border-radius: 12px;
   }
 
