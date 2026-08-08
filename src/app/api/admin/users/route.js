@@ -34,10 +34,10 @@ export async function GET(req) {
         }
 
         // Filter Logic
-        if (status === 'Verified') {
-            query.isVerified = true;
-        } else if (status === 'Pending') {
-            query.isVerified = false;
+        if (status === 'Verified' || status === 'Active') {
+            query.isBlocked = { $ne: true };
+        } else if (status === 'Blocked' || status === 'Suspended') {
+            query.isBlocked = true;
         }
 
         // Stats Calculation
@@ -48,7 +48,7 @@ export async function GET(req) {
         const newJoined = await User.countDocuments({ createdAt: { $gte: thirtyDaysAgo } });
 
         const pendingVerification = await User.countDocuments({ isVerified: false });
-        const suspendedAccounts = 0; // Placeholder as schema doesn't have status field yet
+        const suspendedAccounts = await User.countDocuments({ isBlocked: true });
 
         // Pagination
         const skip = (page - 1) * limit;

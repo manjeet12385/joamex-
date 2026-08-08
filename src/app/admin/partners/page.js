@@ -253,18 +253,18 @@ export default function PartnersPage() {
                                             <td>
                                                 <div className="user-info">
                                                     <div className="user-img">{partner.fullName?.charAt(0) || 'P'}</div>
-                                                    <div style={{ fontWeight: '500', color: 'white' }}>{partner.fullName}</div>
+                                                    <div style={{ fontWeight: '600', color: '#1F2937' }}>{partner.fullName || 'Partner'}</div>
                                                 </div>
                                             </td>
-                                            <td><span style={{ background: 'rgba(37, 99, 235, 0.1)', color: '#60A5FA', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>{partner.serviceCategory}</span></td>
+                                            <td><span style={{ background: 'rgba(37, 99, 235, 0.1)', color: '#2563EB', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: '600' }}>{partner.serviceCategory}</span></td>
                                             <td>
-                                                <div style={{ fontSize: '0.85rem', color: 'white' }}>{partner.phoneNumber}</div>
-                                                <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>{partner.email}</div>
+                                                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1F2937' }}>📞 {partner.phoneNumber || 'N/A'}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{partner.email}</div>
                                             </td>
                                             <td>
                                                 <span className={`status-badge status-${partner.status?.toLowerCase()}`}>● {partner.status}</span>
                                             </td>
-                                            <td style={{ color: '#9CA3AF', fontSize: '0.85rem' }}>{new Date(partner.createdAt).toLocaleDateString()}</td>
+                                            <td style={{ color: '#4B5563', fontSize: '0.85rem' }}>{new Date(partner.createdAt).toLocaleDateString()}</td>
                                             <td>
                                                 <div className="action-btns">
                                                     <button
@@ -372,6 +372,31 @@ export default function PartnersPage() {
                                     <label style={{ display: 'block', color: '#9CA3AF', marginBottom: '10px', fontSize: '0.9rem' }}>Professional Certification</label>
                                     <div style={{ background: '#1F2937', borderRadius: '12px', overflow: 'hidden', height: '300px' }}>
                                         {selectedPartnerDocs.professionalLicense ? <img src={selectedPartnerDocs.professionalLicense} alt="License" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#4B5563' }}>No image</div>}
+                                    </div>
+                                </div>
+
+                                {/* Bank Payout Details */}
+                                <div style={{ gridColumn: 'span 2', background: '#1F2937', padding: '1.25rem', borderRadius: '12px', marginTop: '10px', border: '1px solid #374151' }}>
+                                    <h3 style={{ color: '#F3F4F6', fontSize: '1rem', marginTop: 0, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        💳 Bank Payout Details
+                                    </h3>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.9rem' }}>
+                                        <div>
+                                            <span style={{ color: '#9CA3AF', display: 'block', fontSize: '0.75rem' }}>Account Holder Name</span>
+                                            <span style={{ color: 'white', fontWeight: '600' }}>{selectedPartnerDocs.accountHolderName || 'Not Provided'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ color: '#9CA3AF', display: 'block', fontSize: '0.75rem' }}>Bank Name</span>
+                                            <span style={{ color: 'white', fontWeight: '600' }}>{selectedPartnerDocs.bankName || 'Not Provided'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ color: '#9CA3AF', display: 'block', fontSize: '0.75rem' }}>Account Number</span>
+                                            <span style={{ color: 'white', fontWeight: '600' }}>{selectedPartnerDocs.accountNumber || 'Not Provided'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ color: '#9CA3AF', display: 'block', fontSize: '0.75rem' }}>IFSC / SWIFT Code</span>
+                                            <span style={{ color: 'white', fontWeight: '600' }}>{selectedPartnerDocs.ifscCode || 'Not Provided'}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

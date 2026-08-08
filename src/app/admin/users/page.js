@@ -60,6 +60,22 @@ export default function UsersPage() {
         }
     };
 
+    const handleUserAction = async (userId, action) => {
+        try {
+            const res = await fetch('/api/admin/users/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, action })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchUsers(pagination.currentPage);
+            }
+        } catch (err) {
+            console.error('Error performing user action:', err);
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <AdminSidebar />
@@ -134,29 +150,47 @@ export default function UsersPage() {
                                     <th>Total Bookings</th>
                                     <th>Join Date</th>
                                     <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: 'white' }}>Loading users...</td></tr>
+                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#9CA3AF' }}>Loading users...</td></tr>
                                 ) : users.length === 0 ? (
-                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#9CA3AF' }}>No users found.</td></tr>
+                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#9CA3AF' }}>No users found.</td></tr>
                                 ) : users.map((user) => (
                                     <tr key={user._id}>
                                         <td>
                                             <div className="user-info">
                                                 <div className="user-img">{(user.fullName || user.email || 'U').charAt(0).toUpperCase()}</div>
-                                                <span style={{ fontWeight: '500', color: 'white' }}>{user.fullName || 'No Name'}</span>
+                                                <span style={{ fontWeight: '600', color: '#1F2937' }}>{user.fullName || 'No Name'}</span>
                                             </div>
                                         </td>
                                         <td style={{ color: '#9CA3AF' }}>{user.email}</td>
-                                        <td>{user.phone || 'N/A'}</td>
-                                        <td>{user.bookings?.length || 0} Bookings</td>
-                                        <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                                        <td style={{ color: '#1F2937', fontWeight: '500' }}>{user.phone || 'N/A'}</td>
+                                        <td style={{ color: '#1F2937' }}>{user.bookings?.length || 0} Bookings</td>
+                                        <td style={{ color: '#6B7280' }}>{new Date(user.createdAt).toLocaleDateString()}</td>
                                         <td>
-                                            <span className={`status-badge status-${user.isVerified ? 'active' : 'pending'}`}>
-                                                {user.isVerified ? 'Verified' : 'Pending'}
+                                            <span className={`status-badge status-${user.isBlocked ? 'rejected' : user.isVerified ? 'active' : 'pending'}`}>
+                                                {user.isBlocked ? 'Blocked' : user.isVerified ? 'Active' : 'Pending'}
                                             </span>
+                                        </td>
+                                        <td>
+                                            {user.isBlocked ? (
+                                                <button
+                                                    onClick={() => handleUserAction(user._id, 'unblock')}
+                                                    style={{ padding: '4px 12px', background: '#10B981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                                                >
+                                                    Unblock
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleUserAction(user._id, 'block')}
+                                                    style={{ padding: '4px 12px', background: '#EF4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                                                >
+                                                    Block
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

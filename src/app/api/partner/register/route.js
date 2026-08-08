@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Partner from '@/models/Partner';
-import Otp from '@/models/Otp';
+import EmailOtp from '@/models/EmailOtp';
 import fs from 'fs';
 import path from 'path';
 
@@ -47,12 +47,12 @@ export async function POST(req) {
             ifscCode
         } = data;
 
-        // Verify that phone number was verified
-        const otpRecord = await Otp.findOne({ phoneNumber, verified: true });
-        if (!otpRecord) {
+        // Verify that email was verified
+        const emailOtpRecord = await EmailOtp.findOne({ email, verified: true });
+        if (!emailOtpRecord) {
             return NextResponse.json({
                 success: false,
-                message: 'Phone number not verified. Please verify your phone number first.'
+                message: 'Email address not verified. Please verify your email address first.'
             }, { status: 400 });
         }
 
@@ -62,14 +62,14 @@ export async function POST(req) {
         const idBackUrl = saveImage(idCardBack, `id_back_${ts}.jpg`);
         const licenseUrl = saveImage(professionalLicense, `license_${ts}.jpg`);
 
-        // Create Partner
+        // Create Partner (phone number is saved in DB directly)
         const newPartner = await Partner.create({
             fullName,
             email,
             phoneNumber,
             experience,
             serviceCategory,
-            isPhoneVerified: true,
+            isPhoneVerified: false,
             status: 'Pending',
             idCardFront: idFrontUrl,
             idCardBack: idBackUrl,
@@ -80,8 +80,8 @@ export async function POST(req) {
             ifscCode,
         });
 
-        // Cleanup OTP
-        await Otp.deleteOne({ phoneNumber });
+        // Cleanup Email OTP
+        await EmailOtp.deleteOne({ email });
 
         return NextResponse.json({
             success: true,

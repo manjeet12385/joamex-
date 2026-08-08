@@ -41,6 +41,15 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isBlocked: {
+        type: Boolean,
+        default: false,
+    },
+    status: {
+        type: String,
+        enum: ['Active', 'Blocked', 'Pending'],
+        default: 'Active',
+    },
     otp: String,
     otpExpiry: Date,
     verificationToken: String,

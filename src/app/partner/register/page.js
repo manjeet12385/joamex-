@@ -221,12 +221,12 @@ export default function PartnerRegister() {
 
     const nextStep = () => {
         if (step === 1) {
-            if (!isEmailVerified) {
-                toast.warning('Please verify your email address.');
+            if (!formData.fullName || !formData.email || !formData.phoneNumber || !formData.serviceCategory) {
+                toast.warning('Please fill in all fields including selecting a service category.');
                 return;
             }
-            if (!formData.fullName || !formData.email || !formData.phoneNumber || !formData.serviceCategory) {
-                toast.warning('Please fill in all fields.');
+            if (!isEmailVerified) {
+                toast.warning('Please verify your email address first by clicking "Verify".');
                 return;
             }
         }
@@ -318,7 +318,7 @@ export default function PartnerRegister() {
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleInputChange}
-                                    placeholder="John Doe"
+                                    placeholder="Enter full name"
                                 />
                             </div>
 
@@ -330,7 +330,7 @@ export default function PartnerRegister() {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
-                                        placeholder="john@business.com"
+                                        placeholder="Enter email address"
                                         disabled={isEmailVerified}
                                     />
                                     {isEmailVerified ? (
@@ -355,7 +355,7 @@ export default function PartnerRegister() {
                                         name="phoneNumber"
                                         value={formData.phoneNumber}
                                         onChange={handleInputChange}
-                                        placeholder="+91 98765 43210"
+                                        placeholder="Enter phone number"
                                     />
                                 </div>
                                 <div className={styles.formGroup}>
@@ -511,7 +511,7 @@ export default function PartnerRegister() {
                         )}
 
                         {step < 3 ? (
-                            <button className={styles.nextBtn} onClick={nextStep} disabled={step === 1 && (!isPhoneVerified || !isEmailVerified)}>
+                            <button className={styles.nextBtn} onClick={nextStep}>
                                 Next Step <FaArrowRight />
                             </button>
                         ) : (

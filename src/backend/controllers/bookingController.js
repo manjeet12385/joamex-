@@ -22,6 +22,20 @@ export async function createBookingController(request) {
         const effectiveEmail = userDetails?.email || verifiedUser?.email || nextAuthToken?.email || 'guest@example.com';
         const effectiveName = userDetails?.name || verifiedUser?.name || nextAuthToken?.name || 'Guest User';
 
+        // Check if User is Blocked
+        if (effectiveEmail) {
+            const User = (await import('@/backend/models/User')).default;
+            const existingUser = await User.findOne({
+                $or: [{ email: effectiveEmail }]
+            });
+            if (existingUser && (existingUser.isBlocked || existingUser.status === 'Blocked')) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Your account has been suspended by Admin from making new service bookings. Please contact support.'
+                }, { status: 403 });
+            }
+        }
+
         const newBooking = await Booking.create({
             userId: effectiveUserId,
             userDetails: {
