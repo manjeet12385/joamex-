@@ -179,6 +179,15 @@ export default function Hero() {
       image: '/grid2-electrician.jpg',
       route: '/electrician',
       hideText: false
+    },
+    {
+      id: 'jd-card-3',
+      title: 'Carpentry & Repairs',
+      subtitle: 'Assembly & Woodwork',
+      badge: 'TOP RATED',
+      image: '/carpenter.png',
+      route: '/carpenter',
+      hideText: false
     }
   ];
 
@@ -218,7 +227,7 @@ export default function Hero() {
         if (storedCards) {
           const parsed = JSON.parse(storedCards);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setJustdialSideCards(parsed.slice(0, 2));
+            setJustdialSideCards(parsed.slice(0, 3));
           }
         }
       } catch (e) {
@@ -993,8 +1002,8 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* RIGHT SIDE - 2 Vertical Cards Arranged Side-by-Side */}
-            <div style={{ flex: 1.1, minWidth: 0 }}>
+            {/* RIGHT SIDE - 3 Vertical Cards Arranged Side-by-Side */}
+            <div style={{ flex: 1.4, minWidth: 0 }}>
               <div className="justdial-4cards-grid">
                 {justdialSideCards.map((card, cardIndex) => {
                   const isOnlyPhoto = card.hideText || (!card.title && !card.subtitle && !card.badge);
