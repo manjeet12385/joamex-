@@ -53,7 +53,7 @@
 
 .promo-image {
   position: relative;
-  height: 320px;
+  height: 240px;
   background: linear-gradient(135deg, #a8d5ba 0%, #7fb89a 100%);
   overflow: hidden;
 }
@@ -821,7 +821,7 @@
 .justdial-main-carousel {
   position: relative;
   width: 100%;
-  height: 340px;
+  height: 250px;
   overflow: hidden;
   border-radius: 16px;
 }
@@ -983,7 +983,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 340px;
+  height: 250px;
 }
 
 .justdial-vertical-card:hover {
@@ -1098,11 +1098,11 @@
 /* 1. Large Laptops / Desktops (1200px - 1440px) */
 @media (max-width: 1366px) {
   .justdial-main-carousel {
-    height: 310px;
+    height: 240px;
   }
 
   .justdial-vertical-card {
-    height: 310px;
+    height: 240px;
   }
 
   .jd-card-image-box {
@@ -1125,11 +1125,11 @@
   }
 
   .justdial-main-carousel {
-    height: 280px;
+    height: 220px;
   }
 
   .justdial-vertical-card {
-    height: 280px;
+    height: 220px;
   }
 
   .jd-card-image-box {
@@ -1170,7 +1170,7 @@
   }
 
   .justdial-main-carousel {
-    height: 240px;
+    height: 200px;
   }
 
   .justdial-4cards-grid {
@@ -1179,7 +1179,7 @@
   }
 
   .justdial-vertical-card {
-    height: 240px;
+    height: 200px;
   }
 
   .jd-card-image-box {
@@ -1223,7 +1223,7 @@
   }
 
   .justdial-main-carousel {
-    height: 210px;
+    height: 180px;
   }
 
   .slide-top-badge {
