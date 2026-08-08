@@ -227,7 +227,11 @@ export default function Hero() {
         if (storedCards) {
           const parsed = JSON.parse(storedCards);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setJustdialSideCards(parsed.slice(0, 3));
+            let merged = [...parsed];
+            while (merged.length < 3 && defaultJustdialSideCards[merged.length]) {
+              merged.push(defaultJustdialSideCards[merged.length]);
+            }
+            setJustdialSideCards(merged.slice(0, 3));
           }
         }
       } catch (e) {
