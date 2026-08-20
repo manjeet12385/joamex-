@@ -1087,22 +1087,6 @@ export default function Hero() {
                 {isAdmin && adminEditMode && (
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button
-                      onClick={handleResetCategoriesGrid}
-                      style={{
-                        background: '#64748b',
-                        color: '#ffffff',
-                        border: 'none',
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        cursor: 'pointer'
-                      }}
-                      title="Reset grid to default items"
-                    >
-                      ↺ Reset Grid
-                    </button>
-                    <button
                       onClick={handleOpenAddCategoryModal}
                       style={{
                         background: '#10b981',
