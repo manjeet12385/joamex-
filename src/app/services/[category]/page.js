@@ -53,7 +53,7 @@ export default function ServicePage() {
       bookings: '50K bookings',
       buttonText: 'View Services',
       bannerSubtitle: `Professional ${formattedTitle} Services at Home`,
-      bannerImage: '/baglamukhi-banner.jpg'
+      bannerImage: '/home-cleaning-banner.png'
     });
     const [showBannerModal, setShowBannerModal] = useState(false);
     const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -140,7 +140,11 @@ export default function ServicePage() {
       const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
       if (storedHeader) {
         try {
-          setHeaderInfo(JSON.parse(storedHeader));
+          const parsed = JSON.parse(storedHeader);
+          if (parsed && (parsed.bannerImage === '/baglamukhi-banner.jpg' || !parsed.bannerImage)) {
+            parsed.bannerImage = '/home-cleaning-banner.png';
+          }
+          setHeaderInfo(parsed);
         } catch (e) {
           console.error(e);
         }
@@ -636,6 +640,10 @@ export default function ServicePage() {
                     src={headerInfo.bannerImage} 
                     alt={headerInfo.bannerSubtitle}
                     className="video-poster-img"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/home-cleaning-banner.png';
+                    }}
                   />
                 )
               ) : (
