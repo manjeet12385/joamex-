@@ -6,8 +6,38 @@ export default function AdminHeader() {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [notifications, setNotifications] = useState([]);
 
     const [adminEditMode, setAdminEditMode] = useState(false);
+
+    const formatTime = (timestamp) => {
+        if (!timestamp) return '';
+        const diff = Date.now() - new Date(timestamp).getTime();
+        const mins = Math.floor(diff / 60000);
+        const hours = Math.floor(mins / 60);
+        if (mins < 1) return 'Just now';
+        if (mins < 60) return `${mins}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        return new Date(timestamp).toLocaleDateString();
+    };
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const res = await fetch('/api/admin/activity');
+                const data = await res.json();
+                if (data.success) {
+                    setNotifications(data.activities);
+                }
+            } catch (error) {
+                console.error('Failed to fetch notifications:', error);
+            }
+        };
+
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 15000); // Poll every 15s
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const stored = localStorage.getItem('admin_edit_mode');
@@ -142,20 +172,44 @@ export default function AdminHeader() {
                                 <span style={{ fontSize: '12px', color: '#2563eb', cursor: 'pointer', fontWeight: '600' }}>Mark all as read</span>
                             </div>
                             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>👤</div>
-                                    <div>
-                                        <p style={{ margin: 0, fontSize: '13px', color: '#0f172a' }}>New partner registration: <strong>Aman Sharma</strong></p>
-                                        <span style={{ fontSize: '11px', color: '#64748b' }}>2 minutes ago</span>
+                                {notifications && notifications.length > 0 ? (
+                                    notifications.map((notif, index) => {
+                                        const isPartner = notif.type === 'partner';
+                                        return (
+                                            <div key={notif.id || index} style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                                <div style={{ 
+                                                    width: '32px', 
+                                                    height: '32px', 
+                                                    borderRadius: '50%', 
+                                                    backgroundColor: isPartner ? 'rgba(59, 130, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center', 
+                                                    color: isPartner ? '#2563eb' : '#10B981',
+                                                    fontSize: '14px'
+                                                }}>
+                                                    {isPartner ? '👤' : '📅'}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <p style={{ margin: 0, fontSize: '13px', color: '#0f172a', lineHeight: '1.4' }}>
+                                                        {isPartner ? (
+                                                            <>New partner registration: <strong>{notif.description.replace(' applied for ', ' (').concat(')')}</strong></>
+                                                        ) : (
+                                                            <>New user registration: <strong>{notif.description.replace(' joined the platform', '')}</strong></>
+                                                        )}
+                                                    </p>
+                                                    <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>
+                                                        {formatTime(notif.timestamp)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                                        No new notifications
                                     </div>
-                                </div>
-                                <div style={{ padding: '12px 16px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>📅</div>
-                                    <div>
-                                        <p style={{ margin: 0, fontSize: '13px', color: '#0f172a' }}>New booking for <strong>AC Repair</strong></p>
-                                        <span style={{ fontSize: '11px', color: '#64748b' }}>1 hour ago</span>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                             <div style={{ padding: '10px', textAlign: 'center', borderTop: '1px solid #e2e8f0' }}>
                                 <span style={{ fontSize: '13px', color: '#64748b', cursor: 'pointer', fontWeight: '600' }}>View all notifications</span>
