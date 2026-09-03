@@ -311,7 +311,8 @@ export default function BridalMakeupPage() {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminEditMode, setAdminEditMode] = useState(false);
-  const [servicesList, setServicesList] = useState(servicesData);
+  const [servicesList, setServicesList] = useState([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [targetSectionId, setTargetSectionId] = useState('packages');
   const [editingItem, setEditingItem] = useState(null);
@@ -360,6 +361,7 @@ export default function BridalMakeupPage() {
 
     window.addEventListener('storage', checkAdmin);
     window.addEventListener('focus', checkAdmin);
+    setIsDataLoaded(true);
     window.addEventListener('admin_edit_mode_changed', checkAdmin);
     return () => {
       clearInterval(interval);
@@ -617,6 +619,17 @@ export default function BridalMakeupPage() {
     }
     return <img src={section.icon} alt={section.title} />;
   };
+
+    if (!isDataLoaded) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <Header />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '16px', fontWeight: '600' }}>
+          Loading Details...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bridal-makeup-page-wrapper">
@@ -876,7 +889,7 @@ export default function BridalMakeupPage() {
 
       {/* ON-PAGE ADMIN PACKAGE MODAL */}
       {showPackageModal && (
-        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowPackageModal(false)}>
+        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '520px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
             <button onClick={() => setShowPackageModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
@@ -1018,7 +1031,7 @@ export default function BridalMakeupPage() {
 
       {/* EDIT SIDEBAR CATEGORY MODAL */}
       {showCategoryModal && (
-        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowCategoryModal(false)}>
+        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '440px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
             <button onClick={() => setShowCategoryModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>

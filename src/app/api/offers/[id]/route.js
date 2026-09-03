@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import connectDB from '@/backend/config/db';
 import Offer from '@/backend/models/Offer';
@@ -5,7 +6,7 @@ import Offer from '@/backend/models/Offer';
 export async function PUT(req, { params }) {
     try {
         await connectDB();
-        const { id } = params;
+        const { id } = await params;
         const data = await req.json();
         
         const updatedOffer = await Offer.findByIdAndUpdate(id, data, { new: true });
@@ -23,7 +24,7 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
     try {
         await connectDB();
-        const { id } = params;
+        const { id } = await params;
         
         const deletedOffer = await Offer.findByIdAndDelete(id);
         if (!deletedOffer) {

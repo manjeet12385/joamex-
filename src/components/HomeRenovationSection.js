@@ -5,83 +5,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import './HomeRenovationSection.css';
 
-const defaultServices = [
-    {
-        id: 'renov-1',
-        icon: '🚿',
-        title: 'Bathroom Renovation',
-        iconBg: '#E3F2FD',
-        image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
-        route: '/services/bathroom-renovation',
-        subcategories: [
-            { name: 'Complete Bathroom Renovation', icon: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=500&auto=format&fit=crop&q=80', route: '/services/bathroom-renovation' },
-            { name: 'Bathroom Tiling', icon: 'https://images.unsplash.com/photo-1520699049698-acd2fccb8cc8?w=500&auto=format&fit=crop&q=80', route: '/services/bathroom-tiling' },
-            { name: 'Bathroom Plumbing', icon: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=500&auto=format&fit=crop&q=80', route: '/plumber' },
-            { name: 'Bathroom Fixtures', icon: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500&auto=format&fit=crop&q=80', route: '/services/bathroom-fixtures' },
-            { name: 'Shower Installation', icon: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?w=500&auto=format&fit=crop&q=80', route: '/services/shower-installation' }
-        ]
-    },
-    {
-        id: 'renov-2',
-        icon: '🎨',
-        title: 'Painter',
-        iconBg: '#FCE4EC',
-        image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&h=300&fit=crop',
-        route: '/services/painter',
-        subcategories: [
-            { name: 'Interior Painting', icon: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500&auto=format&fit=crop&q=80', route: '/services/interior-painting' },
-            { name: 'Exterior Painting', icon: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=500&auto=format&fit=crop&q=80', route: '/services/exterior-painting' },
-            { name: 'Wall Texture', icon: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=500&auto=format&fit=crop&q=80', route: '/services/wall-texture' },
-            { name: 'Wallpaper Installation', icon: 'https://images.unsplash.com/photo-1585128792020-803d29415281?w=500&auto=format&fit=crop&q=80', route: '/services/wallpaper' },
-            { name: 'Wood Polishing', icon: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=500&auto=format&fit=crop&q=80', route: '/services/wood-polishing' }
-        ]
-    },
-    {
-        id: 'renov-3',
-        icon: '💧',
-        title: 'Waterproofing',
-        iconBg: '#E8F5E9',
-        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop',
-        route: '/services/waterproofing',
-        subcategories: [
-            { name: 'Roof Waterproofing', icon: 'https://images.unsplash.com/photo-1632759145351-1d592919f522?w=500&auto=format&fit=crop&q=80', route: '/services/roof-waterproofing' },
-            { name: 'Bathroom Waterproofing', icon: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=500&auto=format&fit=crop&q=80', route: '/services/bathroom-waterproofing' },
-            { name: 'Terrace Waterproofing', icon: 'https://images.unsplash.com/photo-1590725140246-20acddc1ec6d?w=500&auto=format&fit=crop&q=80', route: '/services/terrace-waterproofing' },
-            { name: 'Wall Waterproofing', icon: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=500&auto=format&fit=crop&q=80', route: '/services/wall-waterproofing' },
-            { name: 'Basement Waterproofing', icon: 'https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=500&auto=format&fit=crop&q=80', route: '/services/basement-waterproofing' }
-        ]
-    },
-    {
-        id: 'renov-4',
-        icon: '🏗️',
-        title: 'Civil Works',
-        iconBg: '#FFF3E0',
-        image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&h=300&fit=crop',
-        route: '/services/civil-works',
-        subcategories: [
-            { name: 'Masonry Work', icon: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500&auto=format&fit=crop&q=80', route: '/services/masonry' },
-            { name: 'Plastering', icon: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=500&auto=format&fit=crop&q=80', route: '/services/plastering' },
-            { name: 'Concrete Work', icon: 'https://images.unsplash.com/photo-1590725140246-20acddc1ec6d?w=500&auto=format&fit=crop&q=80', route: '/services/concrete-work' },
-            { name: 'Demolition', icon: 'https://images.unsplash.com/photo-1567789884554-0b844b597180?w=500&auto=format&fit=crop&q=80', route: '/services/demolition' },
-            { name: 'Foundation Work', icon: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&auto=format&fit=crop&q=80', route: '/services/foundation' }
-        ]
-    },
-    {
-        id: 'renov-5',
-        icon: '🔲',
-        title: 'Flooring / Tiling',
-        iconBg: '#F3E5F5',
-        image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?w=400&h=300&fit=crop',
-        route: '/services/flooring-tiling',
-        subcategories: [
-            { name: 'Marble Flooring', icon: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?w=500&auto=format&fit=crop&q=80', route: '/services/marble-flooring' },
-            { name: 'Tile Installation', icon: 'https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=500&auto=format&fit=crop&q=80', route: '/services/tile-installation' },
-            { name: 'Wooden Flooring', icon: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500&auto=format&fit=crop&q=80', route: '/services/wooden-flooring' },
-            { name: 'Vinyl Flooring', icon: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=500&auto=format&fit=crop&q=80', route: '/services/vinyl-flooring' },
-            { name: 'Granite Flooring', icon: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=500&auto=format&fit=crop&q=80', route: '/services/granite-flooring' }
-        ]
-    }
-];
+const defaultServices = [];
 
 const PRESET_PAGES = [
     { name: '-- Select Existing Page / Category --', route: '' },
@@ -109,7 +33,8 @@ const PRESET_PAGES = [
 export default function HomeRenovationSection() {
     const router = useRouter();
     const [selectedService, setSelectedService] = useState(null);
-    const [servicesList, setServicesList] = useState(defaultServices);
+    const [servicesList, setServicesList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const scrollRef = useRef(null);
 
     const [isAdmin, setIsAdmin] = useState(false);
@@ -123,35 +48,46 @@ export default function HomeRenovationSection() {
     const [editingCard, setEditingCard] = useState(null);
     const [cardForm, setCardForm] = useState({
       title: '',
-      route: '/services',
+      route: '',
       image: ''
     });
 
-    const loadServices = () => {
+    const loadServices = async () => {
         try {
-            const savedTitle = localStorage.getItem('admin_renovation_title');
-            if (savedTitle) setSectionTitle(savedTitle);
+            const isAdm = !!localStorage.getItem('adminUser');
+            const isEd = localStorage.getItem('admin_edit_mode') === 'true';
+            const mode = (isAdm && isEd) ? '?mode=draft' : '?mode=live';
 
-            const stored = localStorage.getItem('admin_renovation_services');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length >= 2) {
-                    setServicesList(parsed);
-                    return;
-                }
+            const res = await fetch('/api/admin/home-renovation' + mode);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.services)) {
+                setServicesList(data.services);
+                if (data.sectionTitle) setSectionTitle(data.sectionTitle);
             }
-            setServicesList(defaultServices);
         } catch (e) {
             console.error('Failed loading renovation services:', e);
-            setServicesList(defaultServices);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleResetDefaults = () => {
-        if (confirm("Restore all 5 default Home Renovation services (Bathroom Renovation, Painter, Waterproofing, Civil Works, Flooring/Tiling)?")) {
-            localStorage.removeItem('admin_renovation_services');
-            setServicesList(defaultServices);
-            toast.success("Restored all 5 default Home Renovation services!");
+    const handleResetDefaults = async () => {
+        if (confirm("Restore all 5 default Home Renovation services?")) {
+            try {
+                const res = await fetch('/api/admin/home-renovation');
+                const data = await res.json();
+                if (data.success && Array.isArray(data.services)) {
+                    for (const item of data.services) {
+                        await fetch(`/api/admin/home-renovation?id=${item._id}`, { method: 'DELETE' });
+                    }
+                }
+                const res2 = await fetch('/api/admin/home-renovation');
+                const data2 = await res2.json();
+                if (data2.success) setServicesList(data2.services || []);
+                toast.success("Restored default Home Renovation services!");
+            } catch (e) {
+                toast.error('Failed to reset');
+            }
         }
     };
 
@@ -182,18 +118,17 @@ export default function HomeRenovationSection() {
     }, []);
 
     const handleSmartCardNavigate = (e, route) => {
-      if (e) {
+      if (adminEditMode) {
         e.preventDefault();
-        e.stopPropagation();
-      }
-      if (!route) {
-        router.push('/services');
         return;
       }
-      let cleanRoute = route.trim();
-      if (cleanRoute === '/ac' || cleanRoute === 'ac' || cleanRoute === '/services/ac') {
-        cleanRoute = '/ac-repair';
+      
+      const cleanRoute = route?.trim() || '';
+      
+      if (!cleanRoute) {
+        return;
       }
+
       const catMapping = {
         'electrician-plumber': 'electrician-plumber',
         'ac-appliance': 'ac-appliance',
@@ -238,10 +173,15 @@ export default function HomeRenovationSection() {
     };
 
     const handleServiceClick = (service) => {
+        if (isAdmin && adminEditMode) {
+            toast.info("Navigation is disabled in Edit Mode. Use the Edit (✏️) button to change the link.");
+            return;
+        }
+
         if (service.subcategories && service.subcategories.length > 0) {
           setSelectedService(service);
-        } else {
-          handleSmartCardNavigate(null, service.route || `/services/${service.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
+        } else if (service.route && service.route.trim() !== '') {
+          handleSmartCardNavigate(null, service.route);
         }
     };
 
@@ -256,19 +196,30 @@ export default function HomeRenovationSection() {
         }
     };
 
-    const handleSaveTitle = (e) => {
+    const handleSaveTitle = async (e) => {
       e.preventDefault();
       setSectionTitle(titleFormText.trim());
-      localStorage.setItem('admin_renovation_title', titleFormText.trim());
+      try {
+        const res = await fetch('/api/admin/home-renovation', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: servicesList, sectionTitle: titleFormText.trim() })
+        });
+        if (res.ok) {
+          toast.success("Title saved as draft!");
+        } else {
+          toast.error('Failed to save title');
+        }
+      } catch (e) {
+        toast.error('Failed to save title');
+      }
       setShowTitleModal(false);
-      toast.success("Section title updated!");
     };
-
     const handleOpenAddCard = () => {
       setEditingCard(null);
       setCardForm({
         title: '',
-        route: '/services',
+        route: '',
         image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop'
       });
       setShowCardModal(true);
@@ -279,56 +230,72 @@ export default function HomeRenovationSection() {
       setEditingCard(card);
       setCardForm({
         title: card.title || '',
-        route: card.route || '/services',
+        route: card.route || '',
         image: card.image || ''
       });
       setShowCardModal(true);
     };
 
-    const handleDeleteCard = (e, cardId) => {
+    const handleDeleteCard = async (e, cardId) => {
       e.stopPropagation();
       if (confirm("Delete this renovation card?")) {
-        const updated = servicesList.filter(c => (c.id || c.title) !== cardId);
-        setServicesList(updated);
-        localStorage.setItem('admin_renovation_services', JSON.stringify(updated));
-        toast.success("Card deleted!");
+        try {
+          const updated = servicesList.filter(c => (c._id || c.id || c.title) !== cardId);
+          const res = await fetch('/api/admin/home-renovation', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: updated, sectionTitle })
+          });
+          if (res.ok) {
+            setServicesList(updated);
+            toast.success("Card deleted (saved as draft)!");
+          } else {
+            toast.error("Failed to delete card");
+          }
+        } catch (err) {
+          toast.error('Failed to delete card');
+        }
       }
     };
 
-    const handleSaveCard = (e) => {
+    const handleSaveCard = async (e) => {
       e.preventDefault();
       if (!cardForm.title.trim()) return;
 
-      let updated = [];
-      if (editingCard) {
-        updated = servicesList.map(c => {
-          if ((c.id && c.id === editingCard.id) || c.title === editingCard.title) {
-            return {
-              ...c,
-              title: cardForm.title.trim(),
-              route: cardForm.route.trim(),
-              image: cardForm.image.trim() || c.image
-            };
-          }
-          return c;
+      const payload = {
+        id: (editingCard && (editingCard._id || editingCard.id)) ? (editingCard._id || editingCard.id) : Date.now().toString(),
+        title: cardForm.title.trim(),
+        route: cardForm.route.trim(),
+        image: cardForm.image.trim(),
+        isActive: true
+      };
+
+      try {
+        let updated = [];
+        if (editingCard && (editingCard._id || editingCard.id)) {
+          updated = servicesList.map(c => (c._id === editingCard._id || c.id === editingCard.id) ? { ...c, ...payload } : c);
+        } else {
+          payload.order = servicesList.length;
+          updated = [...servicesList, payload];
+        }
+
+        const res = await fetch('/api/admin/home-renovation', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: updated, sectionTitle })
         });
-      } else {
-        const newCard = {
-          id: `renov-${Date.now()}`,
-          title: cardForm.title.trim(),
-          route: cardForm.route.trim() || `/services/${cardForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-          image: cardForm.image.trim() || 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
-          subcategories: [
-            { name: `${cardForm.title.trim()} Service`, icon: cardForm.image.trim(), route: `/services/${cardForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` }
-          ]
-        };
-        updated = [...servicesList, newCard];
+        
+        if (res.ok) {
+          setServicesList(updated);
+          toast.success("Card saved as draft!");
+        } else {
+          toast.error('Failed to save card');
+        }
+      } catch (err) {
+        toast.error('Network error saving card');
       }
 
-      setServicesList(updated);
-      localStorage.setItem('admin_renovation_services', JSON.stringify(updated));
       setShowCardModal(false);
-      toast.success(editingCard ? "Card updated live!" : "New renovation card published!");
     };
 
     const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -367,12 +334,22 @@ export default function HomeRenovationSection() {
       reader.readAsDataURL(file);
     };
 
+    if (!isLoading && servicesList.length === 0 && !adminEditMode) {
+        return null;
+    }
+
     return (
         <section className="home-renovation-section" style={{ position: 'relative' }}>
             <div className="home-renovation-container">
                 <div className="section-header-scrollable" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h2 className="section-title" style={{ margin: 0 }}>{sectionTitle}</h2>
+                        <h2 className="section-title" style={{ margin: 0 }}>
+                          {isLoading ? (
+                            <span style={{display: 'inline-block', width: '200px', height: '28px', background: '#e2e8f0', borderRadius: '6px', animation: 'pulse 1.5s infinite'}}></span>
+                          ) : (
+                            sectionTitle
+                          )}
+                        </h2>
                         {isAdmin && adminEditMode && (
                           <button
                             onClick={() => {
@@ -398,22 +375,7 @@ export default function HomeRenovationSection() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {isAdmin && adminEditMode && (
                           <>
-                            <button
-                              onClick={handleResetDefaults}
-                              style={{
-                                background: '#64748b',
-                                color: '#ffffff',
-                                border: 'none',
-                                borderRadius: '6px',
-                                padding: '4px 10px',
-                                fontSize: '11px',
-                                fontWeight: '700',
-                                cursor: 'pointer'
-                              }}
-                              title="Reset to 5 default Home Renovation services"
-                            >
-                              ↺ Reset Defaults
-                            </button>
+
                             <button
                               onClick={handleOpenAddCard}
                               style={{
@@ -462,8 +424,13 @@ export default function HomeRenovationSection() {
                     )}
 
                     <div className="home-renovation-grid" ref={scrollRef} onScroll={checkScroll}>
-                    {servicesList.map((service, index) => (
-                        <div
+                    {isLoading ? (
+                        Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={`skeleton-${idx}`} className="renovation-card" style={{ minHeight: '140px', background: '#e2e8f0', borderRadius: '12px', animation: 'pulse 1.5s infinite' }}></div>
+                        ))
+                    ) : (
+                        servicesList.map((service, index) => (
+                            <div
                             key={service.id || index}
                             className="renovation-card"
                             onClick={() => handleServiceClick(service)}
@@ -479,7 +446,7 @@ export default function HomeRenovationSection() {
                                   ✏️
                                 </button>
                                 <button
-                                  onClick={(e) => handleDeleteCard(e, service.id || service.title)}
+                                  onClick={(e) => handleDeleteCard(e, service._id || service.id || service.title)}
                                   style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', width: '22px', height: '22px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   title="Delete Card"
                                 >
@@ -488,19 +455,21 @@ export default function HomeRenovationSection() {
                               </div>
                             )}
 
-                            <div className="renovation-image">
-                                <img src={service.image} alt={service.title} />
-                            </div>
+                            {service.image && (
+                                <div className="renovation-image">
+                                    <img src={service.image} alt={service.title} />
+                                </div>
+                            )}
                             <p>{service.title}</p>
                         </div>
-                    ))}
+                    )))}
                 </div>
                 </div>
             </div>
 
             {/* EDIT TITLE MODAL */}
             {showTitleModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowTitleModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '400px', width: '90%', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowTitleModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Edit Section Title</h3>
@@ -522,7 +491,7 @@ export default function HomeRenovationSection() {
 
             {/* ADD / EDIT CARD MODAL */}
             {showCardModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowCardModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '460px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowCardModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>

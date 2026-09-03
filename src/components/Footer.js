@@ -85,27 +85,12 @@ export default function Footer() {
             <h4>Social Media</h4>
             <div className="social-icons" style={{ marginBottom: '20px' }}>
               <a href="#" className="social-icon twitter" aria-label="Twitter"><Twitter size={20} /></a>
-              <a href="#" className="social-icon facebook" aria-label="Facebook"><Facebook size={20} /></a>
-              <a href="#" className="social-icon instagram" aria-label="Instagram"><Instagram size={20} /></a>
-              <a href="#" className="social-icon linkedin" aria-label="LinkedIn"><Linkedin size={20} /></a>
+              <a href="https://www.facebook.com/vonexperts.in" target="_blank" rel="noopener noreferrer" className="social-icon facebook" aria-label="Facebook"><Facebook size={20} /></a>
+              <a href="https://www.instagram.com/joamex.in/" target="_blank" rel="noopener noreferrer" className="social-icon instagram" aria-label="Instagram"><Instagram size={20} /></a>
+              <a href="https://www.linkedin.com/in/venkanna-kelothu-5b3629419/" target="_blank" rel="noopener noreferrer" className="social-icon linkedin" aria-label="LinkedIn"><Linkedin size={20} /></a>
               <a href="#" className="social-icon youtube" aria-label="YouTube"><Youtube size={20} /></a>
             </div>
-            <div className="app-buttons">
-              <a href="#" className="app-button app-store">
-                <span className="app-icon">🍎</span>
-                <div className="app-text">
-                  <span className="app-small">Download on the</span>
-                  <span className="app-large">App Store</span>
-                </div>
-              </a>
-              <a href="#" className="app-button google-play">
-                <span className="app-icon">▶</span>
-                <div className="app-text">
-                  <span className="app-small">GET IT ON</span>
-                  <span className="app-large">Google Play</span>
-                </div>
-              </a>
-            </div>
+
           </div>
 
         </div>

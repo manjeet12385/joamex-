@@ -5,56 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const defaultServices = [
-    {
-        id: 'essential-1',
-        title: 'Refrigerator',
-        subtitle: 'Repair & Gas refill',
-        image: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=400&h=300&fit=crop',
-        price: 899,
-        route: '/refrigerator'
-    },
-    {
-        id: 'essential-2',
-        title: 'Geyser',
-        subtitle: 'Service & Installation',
-        image: 'https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=400&h=300&fit=crop',
-        price: 699,
-        route: '/geyser'
-    },
-    {
-        id: 'essential-3',
-        title: 'RO Water Purifier',
-        subtitle: 'Repair & Service',
-        image: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&h=300&fit=crop',
-        price: 799,
-        route: '/water-purifier'
-    },
-    {
-        id: 'essential-4',
-        title: 'Gas Stove',
-        subtitle: 'Sales & Servicing',
-        image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=400&h=300&fit=crop',
-        price: 599,
-        route: '/stove'
-    },
-    {
-        id: 'essential-5',
-        title: 'Washing Machine',
-        subtitle: 'Repair & Installation',
-        image: 'https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?w=400&h=300&fit=crop',
-        price: 499,
-        route: '/washing-machine'
-    },
-    {
-        id: 'essential-6',
-        title: 'Microwave Repair',
-        subtitle: 'Inspection & Servicing',
-        image: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=400&h=300&fit=crop',
-        price: 399,
-        route: '/microwave-repair'
-    }
-];
+const defaultServices = [];
 
 const PRESET_PAGES = [
     { name: '-- Select Existing Page / Category --', route: '' },
@@ -81,7 +32,8 @@ const PRESET_PAGES = [
 
 export default function EssentialServicesSection() {
     const router = useRouter();
-    const [servicesList, setServicesList] = useState(defaultServices);
+    const [servicesList, setServicesList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminEditMode, setAdminEditMode] = useState(false);
@@ -96,24 +48,26 @@ export default function EssentialServicesSection() {
       title: '',
       subtitle: '',
       price: '',
-      route: '/services',
+      route: '',
       image: ''
     });
 
-    const loadServices = () => {
+    const loadServices = async () => {
         try {
-            const savedTitle = localStorage.getItem('admin_essential_title');
-            if (savedTitle) setSectionTitle(savedTitle);
+            const isAdm = !!localStorage.getItem('adminUser');
+            const isEd = localStorage.getItem('admin_edit_mode') === 'true';
+            const mode = (isAdm && isEd) ? '?mode=draft' : '?mode=live';
 
-            const stored = localStorage.getItem('admin_essential_services');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setServicesList(parsed);
-                }
+            const res = await fetch('/api/admin/essential-services' + mode);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.services)) {
+                setServicesList(data.services);
+                if (data.sectionTitle) setSectionTitle(data.sectionTitle);
             }
         } catch (e) {
             console.error('Failed loading essential services:', e);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -143,12 +97,24 @@ export default function EssentialServicesSection() {
         };
     }, []);
 
-    const handleSaveTitle = (e) => {
+    const handleSaveTitle = async (e) => {
       e.preventDefault();
       setSectionTitle(titleFormText.trim());
-      localStorage.setItem('admin_essential_title', titleFormText.trim());
+      try {
+        const res = await fetch('/api/admin/essential-services', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: servicesList, sectionTitle: titleFormText.trim() })
+        });
+        if (res.ok) {
+          toast.success("Title saved as draft!");
+        } else {
+          toast.error('Failed to save title');
+        }
+      } catch (e) {
+        toast.error('Failed to save title');
+      }
       setShowTitleModal(false);
-      toast.success("Section title updated!");
     };
 
     const handleOpenAddCard = () => {
@@ -157,7 +123,7 @@ export default function EssentialServicesSection() {
         title: '',
         subtitle: '',
         price: '',
-        route: '/services',
+        route: '',
         image: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=400&h=300&fit=crop'
       });
       setShowCardModal(true);
@@ -170,34 +136,44 @@ export default function EssentialServicesSection() {
         title: card.title || '',
         subtitle: card.subtitle || '',
         price: card.price || '',
-        route: card.route || '/services',
+        route: card.route,
         image: card.image || ''
       });
       setShowCardModal(true);
     };
 
-    const handleDeleteCard = (e, cardId) => {
+    const handleDeleteCard = async (e, cardId) => {
       e.stopPropagation();
       if (confirm("Delete this essential service card?")) {
-        const updated = servicesList.filter(c => (c.id || c.title) !== cardId);
-        setServicesList(updated);
-        localStorage.setItem('admin_essential_services', JSON.stringify(updated));
-        toast.success("Card deleted!");
+        try {
+          const updated = servicesList.filter(c => (c._id || c.id || c.title) !== cardId);
+          const res = await fetch('/api/admin/essential-services', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: updated, sectionTitle })
+          });
+          if (res.ok) {
+            setServicesList(updated);
+            toast.success("Card deleted (saved as draft)!");
+          } else {
+            toast.error("Failed to delete card");
+          }
+        } catch (err) {
+          toast.error('Failed to delete card');
+        }
       }
     };
 
     const handleSmartCardNavigate = (e, route) => {
-      if (e) {
+      if (adminEditMode) {
         e.preventDefault();
-        e.stopPropagation();
-      }
-      if (!route) {
-        router.push('/services');
         return;
       }
-      let cleanRoute = route.trim();
-      if (cleanRoute === '/ac' || cleanRoute === 'ac' || cleanRoute === '/services/ac') {
-        cleanRoute = '/ac-repair';
+      
+      const cleanRoute = route?.trim() || '';
+      
+      if (!cleanRoute || cleanRoute === '#') {
+        return;
       }
       const catMapping = {
         'electrician-plumber': 'electrician-plumber',
@@ -242,41 +218,46 @@ export default function EssentialServicesSection() {
       }
     };
 
-    const handleSaveCard = (e) => {
+    const handleSaveCard = async (e) => {
       e.preventDefault();
       if (!cardForm.title.trim()) return;
 
-      let updated = [];
-      if (editingCard) {
-        updated = servicesList.map(c => {
-          if ((c.id && c.id === editingCard.id) || c.title === editingCard.title) {
-            return {
-              ...c,
-              title: cardForm.title.trim(),
-              subtitle: cardForm.subtitle.trim(),
-              price: cardForm.price ? Number(cardForm.price) : undefined,
-              route: cardForm.route.trim(),
-              image: cardForm.image.trim() || c.image
-            };
-          }
-          return c;
+      const payload = {
+        id: (editingCard && (editingCard._id || editingCard.id)) ? (editingCard._id || editingCard.id) : Date.now().toString(),
+        title: cardForm.title.trim(),
+        subtitle: cardForm.subtitle.trim(),
+        price: cardForm.price ? Number(cardForm.price) : undefined,
+        route: cardForm.route.trim(),
+        image: cardForm.image.trim(),
+        isActive: true
+      };
+
+      try {
+        let updated = [];
+        if (editingCard && (editingCard._id || editingCard.id)) {
+          updated = servicesList.map(c => (c._id === editingCard._id || c.id === editingCard.id) ? { ...c, ...payload } : c);
+        } else {
+          payload.order = servicesList.length;
+          updated = [...servicesList, payload];
+        }
+
+        const res = await fetch('/api/admin/essential-services', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: updated, sectionTitle })
         });
-      } else {
-        const newCard = {
-          id: `essential-${Date.now()}`,
-          title: cardForm.title.trim(),
-          subtitle: cardForm.subtitle.trim(),
-          price: cardForm.price ? Number(cardForm.price) : undefined,
-          route: cardForm.route.trim() || '/services',
-          image: cardForm.image.trim() || 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=400&h=300&fit=crop'
-        };
-        updated = [...servicesList, newCard];
+        
+        if (res.ok) {
+          setServicesList(updated);
+          toast.success("Card saved as draft!");
+        } else {
+          toast.error('Failed to save card');
+        }
+      } catch (err) {
+        toast.error('Network error saving card');
       }
 
-      setServicesList(updated);
-      localStorage.setItem('admin_essential_services', JSON.stringify(updated));
       setShowCardModal(false);
-      toast.success(editingCard ? "Card updated live!" : "New essential service card added!");
     };
 
     const scrollRef = useRef(null);
@@ -322,12 +303,22 @@ export default function EssentialServicesSection() {
       reader.readAsDataURL(file);
     };
 
+    if (!isLoading && servicesList.length === 0 && !adminEditMode) {
+        return null;
+    }
+
     return (
         <section className="essential-services-section" style={{ position: 'relative' }}>
             <div className="essential-services-container">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h2 className="section-title" style={{ margin: 0 }}>{sectionTitle}</h2>
+                        <h2 className="section-title" style={{ margin: 0 }}>
+                          {isLoading ? (
+                            <span style={{display: 'inline-block', width: '200px', height: '28px', background: '#e2e8f0', borderRadius: '6px', animation: 'pulse 1.5s infinite'}}></span>
+                          ) : (
+                            sectionTitle
+                          )}
+                        </h2>
                         {isAdmin && adminEditMode && (
                           <button
                             onClick={() => {
@@ -396,11 +387,16 @@ export default function EssentialServicesSection() {
                     )}
 
                     <div className="essential-services-grid" ref={scrollRef} onScroll={checkScroll}>
-                    {servicesList.map((service, index) => (
-                        <div
+                    {isLoading ? (
+                        Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={`skeleton-${idx}`} className="essential-card" style={{ minHeight: '220px', background: '#e2e8f0', borderRadius: '16px', animation: 'pulse 1.5s infinite' }}></div>
+                        ))
+                    ) : (
+                        servicesList.map((service, index) => (
+                            <div
                             key={service.id || index}
                             className="essential-card"
-                            onClick={(e) => handleSmartCardNavigate(e, service.route || '/services')}
+                            onClick={(e) => handleSmartCardNavigate(e, service.route)}
                             style={{ cursor: 'pointer', position: 'relative' }}
                         >
                             {isAdmin && adminEditMode && (
@@ -413,7 +409,7 @@ export default function EssentialServicesSection() {
                                   ✏️
                                 </button>
                                 <button
-                                  onClick={(e) => handleDeleteCard(e, service.id || service.title)}
+                                  onClick={(e) => handleDeleteCard(e, service._id || service.id || service.title)}
                                   style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', width: '22px', height: '22px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   title="Delete Card"
                                 >
@@ -433,14 +429,14 @@ export default function EssentialServicesSection() {
                                 )}
                             </div>
                         </div>
-                    ))}
+                    )))}
                 </div>
                 </div>
             </div>
 
             {/* EDIT TITLE MODAL */}
             {showTitleModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowTitleModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '400px', width: '90%', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowTitleModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Edit Section Title</h3>
@@ -462,7 +458,7 @@ export default function EssentialServicesSection() {
 
             {/* ADD / EDIT CARD MODAL */}
             {showCardModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowCardModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '460px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowCardModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>

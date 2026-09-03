@@ -116,26 +116,28 @@ export default function CartPage() {
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const [locationError, setLocationError] = useState('');
 
-    // Generate next 4 days dynamically
-    const generateDates = () => {
-        const dates = [];
-        const today = new Date();
-        for (let i = 0; i < 4; i++) {
-            const nextDate = new Date(today);
-            nextDate.setDate(today.getDate() + i);
-            const day = nextDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-            const dateNum = nextDate.getDate();
-            dates.push(`${day} ${dateNum}`);
-        }
-        return dates;
-    };
-    const dateOptions = generateDates();
+
 
     const subtotal = getCartTotal();
-    const convenienceFee = 2.00;
-    const serviceFee = 2.80;
-    const taxes = 1.45;
-    const total = subtotal - discount + convenienceFee + serviceFee + taxes;
+    const [convenienceFee] = useState(49);
+    const [serviceFee] = useState(99);
+    const [taxes, setTaxes] = useState(0);
+    const [total, setTotal] = useState(0);
+
+    useEffect(() => {
+        setTotal(subtotal + convenienceFee + serviceFee + taxes - discount);
+    }, [subtotal, convenienceFee, serviceFee, taxes, discount]);
+
+    const [isRazorpayOpen, setIsRazorpayOpen] = useState(false);
+    const [paymentProcessing, setPaymentProcessing] = useState(false);
+    
+    // 30-Minute Time Slots
+    const timeSlots = [
+        '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', 
+        '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', 
+        '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM', 
+        '05:00 PM', '05:30 PM', '06:00 PM'
+    ];
 
     const applyCoupon = () => {
         if (couponCode === 'SAVE10') {
@@ -198,6 +200,11 @@ export default function CartPage() {
     };
 
     const handleCheckout = async () => {
+        if (!activeUser) {
+            alert('Please login or signup to proceed with booking.');
+            setCurrentStep(1);
+            return;
+        }
         if (!selectedDate || !selectedTime) {
             alert('Please select a date and time.');
             return;
@@ -207,6 +214,19 @@ export default function CartPage() {
             return;
         }
 
+        const itemsText = cart.map(item => `${item.name} (x${item.quantity})`).join(', ');
+        const message = `Hi Joamex, I want to book a service.\n\n*Items:* ${itemsText}\n*Total Amount:* ₹${total.toFixed(2)}\n*Schedule:* ${selectedDate} at ${selectedTime}\n*Address:* ${currentLocation.fullAddress}\n*Name:* ${activeUser.fullName || activeUser.name || 'Guest'}\n*Phone:* ${activeUser.phone || 'Not provided'}`;
+        
+        const whatsappUrl = `https://wa.me/919014380344?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        clearCart();
+        router.push('/');
+    };
+
+    const processPayment = async () => {
+        setPaymentProcessing(true);
+        
         try {
             const res = await fetch('/api/bookings', {
                 method: 'POST',
@@ -225,16 +245,22 @@ export default function CartPage() {
                 })
             });
             const data = await res.json();
+            
             if (data.success) {
-                alert('Booking Confirmed Successfully!');
+                // Payment successful, close modal and redirect to tracking
+                setIsRazorpayOpen(false);
                 clearCart();
-                router.push('/profile');
+                router.push(`/track/${data.booking._id || 'demo-123'}`);
             } else {
                 alert('Booking Failed: ' + data.message);
+                setIsRazorpayOpen(false);
             }
         } catch (error) {
             console.error('Checkout Error:', error);
             alert('An error occurred during checkout.');
+            setIsRazorpayOpen(false);
+        } finally {
+            setPaymentProcessing(false);
         }
     };
 
@@ -393,19 +419,29 @@ export default function CartPage() {
                             <div className="step-content">
                                 <div className="schedule-section">
                                     <h4>Select Date</h4>
-                                    <div className="date-selector">
-                                        {dateOptions.map((date, idx) => (
-                                            <button key={idx} className={`date-btn ${selectedDate === date ? 'selected' : ''}`} onClick={() => setSelectedDate(date)}>
-                                                <div className="date-day">{date.split(' ')[0]}</div>
-                                                <div className="date-num">{date.split(' ')[1]}</div>
-                                            </button>
-                                        ))}
+                                    <div className="date-selector" style={{ display: 'block', margin: '0' }}>
+                                        <input 
+                                            type="date" 
+                                            value={selectedDate} 
+                                            onChange={(e) => setSelectedDate(e.target.value)} 
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem',
+                                                border: '1px solid #d1d5db',
+                                                borderRadius: '0.375rem',
+                                                fontSize: '1rem',
+                                                outline: 'none',
+                                                cursor: 'pointer',
+                                                fontFamily: 'inherit'
+                                            }}
+                                            min={new Date().toISOString().split('T')[0]} // Prevents picking past dates
+                                        />
                                     </div>
                                 </div>
                                 <div className="schedule-section">
-                                    <h4>Select Arrival Time</h4>
-                                    <div className="time-selector">
-                                        {['08:00 AM', '11:00 AM', '02:00 PM', '05:00 PM'].map((time, idx) => (
+                                    <h4>Select Arrival Time (30-min slots)</h4>
+                                    <div className="time-selector" style={{maxHeight: '200px', overflowY: 'auto'}}>
+                                        {timeSlots.map((time, idx) => (
                                             <button key={idx} className={`time-btn ${selectedTime === time ? 'selected' : ''}`} onClick={() => setSelectedTime(time)}>
                                                 <Clock size={16} />
                                                 {time}
@@ -462,6 +498,35 @@ export default function CartPage() {
                     </div>
                 </div>
             </div>
+
+            {/* RAZORPAY MOCK MODAL */}
+            {isRazorpayOpen && (
+                <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <div style={{background: 'white', width: '100%', maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'}}>
+                        <div style={{background: '#0ea5e9', padding: '1.5rem', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <div>
+                                <h3 style={{margin: 0, fontSize: '1.2rem'}}>Jomex Checkout</h3>
+                                <p style={{margin: '0.25rem 0 0 0', opacity: 0.9, fontSize: '0.9rem'}}>Pay secure via Razorpay</p>
+                            </div>
+                            <button onClick={() => setIsRazorpayOpen(false)} style={{background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer'}}>×</button>
+                        </div>
+                        <div style={{padding: '1.5rem', textAlign: 'center'}}>
+                            <div style={{fontSize: '2rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '1.5rem'}}>₹{total.toFixed(2)}</div>
+                            
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                                <button onClick={processPayment} disabled={paymentProcessing} style={{padding: '1rem', background: '#334155', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'}}>
+                                    💳 Pay with UPI / Card
+                                    {paymentProcessing && <span style={{animation: 'spin 1s linear infinite'}}>↻</span>}
+                                </button>
+                            </div>
+                            
+                            <div style={{marginTop: '1.5rem', fontSize: '0.8rem', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'}}>
+                                🔒 Secured by Razorpay
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

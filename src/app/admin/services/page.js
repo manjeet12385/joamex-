@@ -91,6 +91,22 @@ export default function ServicesPage() {
             setSubmitting(false);
         }
     };
+    
+    const handleDeleteService = async (id, name) => {
+        if (!confirm(`Are you sure you want to delete the service "${name}"?`)) return;
+        try {
+            const res = await fetch(`/api/admin/services/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                toast.success(data.message);
+                fetchServices();
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error('Failed to delete service');
+        }
+    };
 
     return (
         <div className="dashboard-container">
@@ -147,12 +163,20 @@ export default function ServicesPage() {
                                                 </span>
                                             </td>
                                             <td>
-                                                <button
-                                                    onClick={() => handleOpenModal(s)}
-                                                    style={{ padding: '4px 12px', background: '#374151', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                                >
-                                                    Edit Rate
-                                                </button>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        onClick={() => handleOpenModal(s)}
+                                                        style={{ padding: '4px 12px', background: '#374151', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteService(s._id, s.name)}
+                                                        style={{ padding: '4px 12px', background: '#EF4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

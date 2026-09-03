@@ -1,15 +1,16 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/lib/db';
-import Partner from '@/models/Partner';
+import mongoose from 'mongoose';
+import connectDB from '@/backend/config/db.js';
+import Partner from '@/backend/models/Partner.js';
 
-export async function GET(req) {
+export async function GET() {
     try {
-        await connectToDatabase();
-        // Fetch only pending partners, sort by newest first
-        const pendingPartners = await Partner.find({ status: 'Pending' }).sort({ createdAt: -1 });
-
-        return NextResponse.json({ success: true, partners: pendingPartners });
+        await connectDB();
+        const partners = await Partner.find({ status: 'Pending' }).sort({ createdAt: -1 });
+        return NextResponse.json({ success: true, partners });
     } catch (error) {
-        return NextResponse.json({ success: false, message: 'Failed to fetch pending partners' }, { status: 500 });
+        console.error('Fetch Pending Partners Error:', error);
+        return NextResponse.json({ success: false, message: 'Server Error' }, { status: 500 });
     }
 }

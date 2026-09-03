@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { otpStore } from '@/lib/store';
 import connectToDatabase from '@/lib/db';

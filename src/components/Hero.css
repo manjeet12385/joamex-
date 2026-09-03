@@ -1,7 +1,7 @@
 .hero {
   width: 100%;
   padding: 0;
-  background: #f8f9fa;
+  background: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   overflow-x: hidden;
 }
@@ -605,14 +605,14 @@
 
   .hero-service-grid {
     display: grid;
-    grid-template-columns: none;
     grid-template-rows: repeat(2, auto);
     grid-auto-flow: column;
-    grid-auto-columns: 28%;
+    grid-auto-columns: minmax(80px, 25%);
+    justify-content: flex-start;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    gap: 16px 20px;
-    padding: 20px 16px;
+    gap: 16px 12px;
+    padding: 16px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
@@ -848,7 +848,7 @@
   height: 100% !important;
   min-height: 100% !important;
   max-height: 100% !important;
-  object-fit: cover !important;
+  object-fit: contain !important;
   display: block !important;
 }
 
@@ -1212,6 +1212,14 @@
 
 /* 4. Small Mobile Screens (<= 767px) */
 @media (max-width: 767px) {
+  .hero-wrapper {
+    display: none !important;
+  }
+
+  .hero-title {
+    display: none !important;
+  }
+
   .justdial-hero-wrapper {
     flex-direction: row !important;
     gap: 10px;

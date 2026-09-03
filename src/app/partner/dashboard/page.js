@@ -21,6 +21,13 @@ export default function PartnerDashboardPremium() {
     const [errorMsg, setErrorMsg] = useState('');
     const [bookings, setBookings] = useState([]);
 
+    // Partner App Phase 5 States
+    const [isOnline, setIsOnline] = useState(false);
+    const [incomingJob, setIncomingJob] = useState(null);
+    const [powModal, setPowModal] = useState({ open: false, bookingId: null });
+    const [powChecklist, setPowChecklist] = useState({ beforePhoto: false, afterPhoto: false, signature: false });
+
+
     // Filtering & Sorting State for Live Service Catalog
     const [filterCategory, setFilterCategory] = useState('All');
     const [filterRating, setFilterRating] = useState('All');
@@ -220,6 +227,28 @@ export default function PartnerDashboardPremium() {
         } catch (err) {
             console.error('Update error:', err);
             alert('Server error occurred.');
+        }
+    };
+
+    const toggleOnlineStatus = async () => {
+        const newStatus = !isOnline;
+        // Optimistic UI update
+        setIsOnline(newStatus);
+        try {
+            const res = await fetch('/api/partner/status', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isOnline: newStatus })
+            });
+            const data = await res.json();
+            if (!data.success) {
+                // Revert if failed
+                setIsOnline(!newStatus);
+                alert('Failed to update status on server');
+            }
+        } catch (err) {
+            setIsOnline(!newStatus);
+            console.error('Status update error', err);
         }
     };
 
@@ -577,7 +606,14 @@ export default function PartnerDashboardPremium() {
                             <FaSearch color="#9CA3AF" />
                             <input type="text" placeholder="Search metrics..." />
                         </div>
-                        <div className="icon-btn"><FaBell /></div>
+                        <div 
+                            style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem', background: isOnline ? '#dcfce7' : '#f1f5f9', padding: '0.5rem 1rem', borderRadius: '20px', cursor: 'pointer', border: '1px solid', borderColor: isOnline ? '#86efac' : '#cbd5e1'}} 
+                            onClick={toggleOnlineStatus}
+                        >
+                            <div style={{width: '10px', height: '10px', borderRadius: '50%', background: isOnline ? '#16a34a' : '#94a3b8', boxShadow: isOnline ? '0 0 5px #16a34a' : 'none'}}></div>
+                            <span style={{fontSize: '0.85rem', fontWeight: 'bold', color: isOnline ? '#166534' : '#475569'}}>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                        </div>
+                        <div className="icon-btn" onClick={() => setIncomingJob({ id: 'BK-9999', category: 'Plumbing', customer: 'Raj', payout: '₹450', distance: '2.5 km' })}><FaBell /></div>
                         <div style={{ position: 'relative' }}>
                             <div 
                                 className="icon-btn" 
@@ -1298,25 +1334,60 @@ export default function PartnerDashboardPremium() {
                                                             Start Work
                                                         </button>
                                                     )}
-                                                    {row.status.toLowerCase() === 'in-progress' && (
-                                                        <button 
-                                                            onClick={() => handleUpdateBookingStatus(row.dbId, 'complete')}
+                                                    {row.status.toLowerCase() === 'confirmed' && (
+                                                        <a 
+                                                            href="https://maps.google.com/?q=Customer+Location" 
+                                                            target="_blank" 
                                                             style={{
-                                                                background: '#8B5CF6',
-                                                                color: 'white',
-                                                                border: 'none',
+                                                                marginLeft: '8px',
+                                                                background: '#F3F4F6',
+                                                                color: '#374151',
+                                                                textDecoration: 'none',
                                                                 padding: '6px 12px',
                                                                 borderRadius: '6px',
                                                                 fontWeight: '600',
-                                                                cursor: 'pointer',
-                                                                fontSize: '0.8rem',
-                                                                transition: 'background 0.2s'
+                                                                fontSize: '0.8rem'
                                                             }}
-                                                            onMouseOver={(e) => e.target.style.background = '#7C3AED'}
-                                                            onMouseOut={(e) => e.target.style.background = '#8B5CF6'}
                                                         >
-                                                            Complete
-                                                        </button>
+                                                            📍 Navigate
+                                                        </a>
+                                                    )}
+                                                    {row.status.toLowerCase() === 'in-progress' && (
+                                                        <div style={{display: 'flex', gap: '8px'}}>
+                                                            <button 
+                                                                onClick={() => handleUpdateBookingStatus(row.dbId, 'complete')}
+                                                                style={{
+                                                                    background: '#8B5CF6',
+                                                                    color: 'white',
+                                                                    border: 'none',
+                                                                    padding: '6px 12px',
+                                                                    borderRadius: '6px',
+                                                                    fontWeight: '600',
+                                                                    cursor: 'pointer',
+                                                                    fontSize: '0.8rem',
+                                                                    transition: 'background 0.2s'
+                                                                }}
+                                                                onMouseOver={(e) => e.target.style.background = '#7C3AED'}
+                                                                onMouseOut={(e) => e.target.style.background = '#8B5CF6'}
+                                                            >
+                                                                Complete
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setPowModal({ open: true, bookingId: row.id })}
+                                                                style={{
+                                                                    background: '#10B981',
+                                                                    color: 'white',
+                                                                    border: 'none',
+                                                                    padding: '6px 12px',
+                                                                    borderRadius: '6px',
+                                                                    fontWeight: '600',
+                                                                    cursor: 'pointer',
+                                                                    fontSize: '0.8rem'
+                                                                }}
+                                                            >
+                                                                Upload POW
+                                                            </button>
+                                                        </div>
                                                     )}
                                                     {row.status.toLowerCase() === 'completed' && (
                                                         <span style={{ color: '#10B981', fontWeight: '600', fontSize: '0.85rem' }}>✓ Finished</span>
@@ -1726,6 +1797,56 @@ export default function PartnerDashboardPremium() {
                             </div>
                             <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                                 <span className="text-btn-blue" style={{ cursor: 'pointer' }}>View all transaction history ›</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* INCOMING JOB MODAL */}
+                {incomingJob && (
+                    <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', border: '2px solid #3B82F6', zIndex: 9999, width: '320px', animation: 'slideUp 0.3s ease-out' }}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+                            <h3 style={{margin: 0, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '0.5rem'}}><span style={{animation: 'pulse 1.5s infinite'}}>🔔</span> New Job Request!</h3>
+                            <div style={{background: '#EFF6FF', color: '#2563EB', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.85rem'}}>45s</div>
+                        </div>
+                        <div style={{fontSize: '0.9rem', color: '#475569', marginBottom: '1rem'}}>
+                            <div><strong>Service:</strong> {incomingJob.category}</div>
+                            <div><strong>Customer:</strong> {incomingJob.customer}</div>
+                            <div><strong>Distance:</strong> {incomingJob.distance} away</div>
+                            <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#10B981', marginTop: '0.5rem'}}>Payout: {incomingJob.payout}</div>
+                        </div>
+                        <div style={{display: 'flex', gap: '10px'}}>
+                            <button style={{flex: 1, padding: '0.75rem', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}} onClick={() => { alert('Job Accepted!'); setIncomingJob(null); }}>Accept Job</button>
+                            <button style={{padding: '0.75rem', background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}} onClick={() => setIncomingJob(null)}>Decline</button>
+                        </div>
+                    </div>
+                )}
+
+                {/* PROOF OF WORK MODAL */}
+                {powModal.open && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px' }}>
+                            <h3 style={{margin: '0 0 1rem 0'}}>Proof of Work: {powModal.bookingId}</h3>
+                            <p style={{color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem'}}>Complete the checklist before closing the job.</p>
+                            
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                                <label style={{display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', border: '1px solid #E2E8F0', borderRadius: '8px'}}>
+                                    <input type="checkbox" checked={powChecklist.beforePhoto} onChange={(e) => setPowChecklist({...powChecklist, beforePhoto: e.target.checked})} style={{width: '20px', height: '20px'}} />
+                                    <span>Upload "Before" Photo 📸</span>
+                                </label>
+                                <label style={{display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', border: '1px solid #E2E8F0', borderRadius: '8px'}}>
+                                    <input type="checkbox" checked={powChecklist.afterPhoto} onChange={(e) => setPowChecklist({...powChecklist, afterPhoto: e.target.checked})} style={{width: '20px', height: '20px'}} />
+                                    <span>Upload "After" Photo 📸</span>
+                                </label>
+                                <label style={{display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', border: '1px solid #E2E8F0', borderRadius: '8px'}}>
+                                    <input type="checkbox" checked={powChecklist.signature} onChange={(e) => setPowChecklist({...powChecklist, signature: e.target.checked})} style={{width: '20px', height: '20px'}} />
+                                    <span>Customer Digital Signature ✍️</span>
+                                </label>
+                            </div>
+
+                            <div style={{display: 'flex', gap: '10px', marginTop: '2rem'}}>
+                                <button style={{flex: 1, padding: '0.75rem', background: '#F1F5F9', border: 'none', borderRadius: '8px', cursor: 'pointer'}} onClick={() => setPowModal({open: false, bookingId: null})}>Cancel</button>
+                                <button style={{flex: 2, padding: '0.75rem', background: '#2563EB', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer'}} disabled={!powChecklist.beforePhoto || !powChecklist.afterPhoto || !powChecklist.signature} onClick={() => { alert('Proof of Work Submitted!'); setPowModal({open: false, bookingId: null}); }}>Submit & Close Job</button>
                             </div>
                         </div>
                     </div>

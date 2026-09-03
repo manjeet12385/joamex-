@@ -736,6 +736,11 @@ html, body, .bridal-makeup-page-wrapper {
         gap: 20px !important;
     }
 
+    /* Flatten columns to reorder children directly in the container */
+    .left-sticky-sidebar-column, .services-main-content {
+        display: contents !important;
+    }
+
     .living-top-header-section {
         flex-direction: column-reverse !important;
         align-items: stretch !important;
@@ -748,6 +753,21 @@ html, body, .bridal-makeup-page-wrapper {
     .living-header-info {
         width: 100% !important;
         max-width: 100% !important;
+        order: 1 !important;
+    }
+
+    .category-hero-video-card {
+        order: 2 !important;
+        margin-top: 4px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .services-sidebar {
+        order: 3 !important;
+    }
+
+    .category-block {
+        order: 4 !important;
     }
 
     .full-home-video-card {

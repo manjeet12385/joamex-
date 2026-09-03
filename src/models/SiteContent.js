@@ -7,6 +7,6 @@ const siteContentSchema = new mongoose.Schema({
     required: true,
     default: {}
   }
-}, { timestamps: true });
+}, { timestamps: true, collection: '01_hero_banner' });
 
 export default mongoose.models.SiteContent || mongoose.model('SiteContent', siteContentSchema);

@@ -1,4 +1,14 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Fix DNS resolution issues on Windows for MongoDB Atlas SRV records
+if (process.platform === 'win32') {
+    try {
+        dns.setServers(['8.8.8.8', '1.1.1.1']);
+    } catch (dnsErr) {
+        console.warn('DNS setServers failed:', dnsErr);
+    }
+}
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -24,9 +34,19 @@ async function connectToDatabase() {
 
         cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
             return mongoose;
+        }).catch(err => {
+            cached.promise = null;
+            throw err;
         });
     }
-    cached.conn = await cached.promise;
+
+    try {
+        cached.conn = await cached.promise;
+    } catch (e) {
+        cached.promise = null;
+        throw e;
+    }
+    
     return cached.conn;
 }
 

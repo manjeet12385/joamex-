@@ -5,68 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const defaultServices = [
-    {
-        id: 'solar-1',
-        icon: '☀️',
-        title: 'Solar Panels',
-        subtitle: 'Installation & Maintenance',
-        iconBg: '#E3F2FD',
-        iconColor: '#1976D2',
-        image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=300&fit=crop',
-        route: '/services/solar-panel'
-    },
-    {
-        id: 'solar-2',
-        icon: '🔆',
-        title: 'Solar Water Heaters',
-        subtitle: 'Eco-friendly heating systems',
-        iconBg: '#FFF3E0',
-        iconColor: '#F57C00',
-        image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400&h=300&fit=crop',
-        route: '/services/solar-water-heater'
-    },
-    {
-        id: 'solar-3',
-        icon: '💧',
-        title: 'Borewell & Water Pumps',
-        subtitle: 'Pumping & drilling services',
-        iconBg: '#E3F2FD',
-        iconColor: '#1976D2',
-        image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=300&fit=crop',
-        route: '/services/water-purifier'
-    },
-    {
-        id: 'solar-4',
-        icon: '🧹',
-        title: 'Water Tank Cleaning',
-        subtitle: 'Deep cleaning & disinfection',
-        iconBg: '#E0F7FA',
-        iconColor: '#0097A7',
-        image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop',
-        route: '/services/water-purifier'
-    },
-    {
-        id: 'solar-5',
-        icon: '🔋',
-        title: 'Solar Inverters',
-        subtitle: 'Battery & backup solutions',
-        iconBg: '#FFF9C4',
-        iconColor: '#FBC02D',
-        image: 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?w=400&h=300&fit=crop',
-        route: '/services/solar-panel'
-    },
-    {
-        id: 'solar-6',
-        icon: '🔧',
-        title: 'Plumbing Repairs',
-        subtitle: 'Pipe leaks & fittings',
-        iconBg: '#F3E5F5',
-        iconColor: '#7B1FA2',
-        image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400&h=300&fit=crop',
-        route: '/plumber'
-    }
-];
+const defaultServices = [];
 
 const PRESET_PAGES = [
     { name: '-- Select Existing Page / Category --', route: '' },
@@ -93,7 +32,8 @@ const PRESET_PAGES = [
 
 export default function SolarWaterSection() {
     const router = useRouter();
-    const [servicesList, setServicesList] = useState(defaultServices);
+    const [servicesList, setServicesList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminEditMode, setAdminEditMode] = useState(false);
@@ -108,35 +48,47 @@ export default function SolarWaterSection() {
       title: '',
       subtitle: '',
       price: '',
-      route: '/services',
+      route: '',
       image: ''
     });
 
-    const loadServices = () => {
+    const loadServices = async () => {
         try {
-            const savedTitle = localStorage.getItem('admin_solarwater_title');
-            if (savedTitle) setSectionTitle(savedTitle);
+            const isAdm = !!localStorage.getItem('adminUser');
+            const isEd = localStorage.getItem('admin_edit_mode') === 'true';
+            const mode = (isAdm && isEd) ? '?mode=draft' : '?mode=live';
 
-            const stored = localStorage.getItem('admin_solarwater_services');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length >= 3) {
-                    setServicesList(parsed);
-                    return;
-                }
+            const res = await fetch('/api/admin/solar-water-solutions' + mode);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.solutions)) {
+                setServicesList(data.solutions);
+                if (data.sectionTitle) setSectionTitle(data.sectionTitle);
             }
-            setServicesList(defaultServices);
         } catch (e) {
             console.error('Failed loading solar water services:', e);
-            setServicesList(defaultServices);
+            setServicesList([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleResetDefaults = () => {
-        if (confirm("Restore default Solar & Water Solutions services (Solar Panels, Solar Water Heaters, Borewell & Water Pumps)?")) {
-            localStorage.removeItem('admin_solarwater_services');
-            setServicesList(defaultServices);
-            toast.success("Restored default Solar & Water Solutions services!");
+    const handleResetDefaults = async () => {
+        if (confirm("Restore default Solar & Water Solutions services?")) {
+            try {
+                const res = await fetch('/api/admin/solar-water-solutions');
+                const data = await res.json();
+                if (data.success && Array.isArray(data.solutions)) {
+                    for (const item of data.solutions) {
+                        await fetch(`/api/admin/solar-water-solutions?id=${item._id}`, { method: 'DELETE' });
+                    }
+                }
+                const res2 = await fetch('/api/admin/solar-water-solutions');
+                const data2 = await res2.json();
+                if (data2.success) setServicesList(data2.solutions || []);
+                toast.success("Restored default Solar & Water services!");
+            } catch (e) {
+                toast.error('Failed to reset');
+            }
         }
     };
 
@@ -166,12 +118,24 @@ export default function SolarWaterSection() {
         };
     }, []);
 
-    const handleSaveTitle = (e) => {
+    const handleSaveTitle = async (e) => {
       e.preventDefault();
       setSectionTitle(titleFormText.trim());
-      localStorage.setItem('admin_solarwater_title', titleFormText.trim());
+      try {
+        const res = await fetch('/api/admin/solar-water-solutions', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: servicesList, sectionTitle: titleFormText.trim() })
+        });
+        if (res.ok) {
+          toast.success("Title saved as draft!");
+        } else {
+          toast.error('Failed to save title');
+        }
+      } catch (e) {
+        toast.error('Failed to save title');
+      }
       setShowTitleModal(false);
-      toast.success("Section title updated!");
     };
 
     const handleOpenAddCard = () => {
@@ -180,8 +144,8 @@ export default function SolarWaterSection() {
         title: '',
         subtitle: '',
         price: '',
-        route: '/services',
-        image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=300&fit=crop'
+        route: '',
+        image: ''
       });
       setShowModal(true);
     };
@@ -193,35 +157,46 @@ export default function SolarWaterSection() {
         title: card.title || '',
         subtitle: card.subtitle || '',
         price: card.price || '',
-        route: card.route || '/services',
+        route: card.route || '',
         image: card.image || ''
       });
       setShowModal(true);
     };
 
-    const handleDeleteCard = (e, cardId) => {
+    const handleDeleteCard = async (e, cardId) => {
       e.stopPropagation();
       if (confirm("Delete this solution card?")) {
-        const updated = servicesList.filter(c => c.id !== cardId);
-        setServicesList(updated);
-        localStorage.setItem('admin_solarwater_services', JSON.stringify(updated));
-        toast.success("Solution card deleted!");
+        try {
+          const updated = servicesList.filter(c => (c._id || c.id) !== cardId);
+          const res = await fetch('/api/admin/solar-water-solutions', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: updated, sectionTitle })
+          });
+          if (res.ok) {
+            setServicesList(updated);
+            toast.success("Card deleted (saved as draft)!");
+          } else {
+            toast.error("Failed to delete card");
+          }
+        } catch (err) {
+          toast.error('Failed to delete card');
+        }
       }
     };
 
     const handleSmartCardNavigate = (e, route) => {
-      if (e) {
+      if (adminEditMode) {
         e.preventDefault();
-        e.stopPropagation();
-      }
-      if (!route) {
-        router.push('/services');
         return;
       }
-      let cleanRoute = route.trim();
-      if (cleanRoute === '/ac' || cleanRoute === 'ac' || cleanRoute === '/services/ac') {
-        cleanRoute = '/ac-repair';
+      
+      const cleanRoute = route?.trim() || '';
+      
+      if (!cleanRoute) {
+        return;
       }
+
       const catMapping = {
         'electrician-plumber': 'electrician-plumber',
         'ac-appliance': 'ac-appliance',
@@ -265,41 +240,46 @@ export default function SolarWaterSection() {
       }
     };
 
-    const handleSaveCard = (e) => {
+    const handleSaveCard = async (e) => {
       e.preventDefault();
       if (!cardForm.title.trim()) return;
 
-      let updated = [];
-      if (editingItem) {
-        updated = servicesList.map(c => {
-          if (c.id === editingItem.id) {
-            return {
-              ...c,
-              title: cardForm.title.trim(),
-              subtitle: cardForm.subtitle.trim(),
-              price: cardForm.price ? Number(cardForm.price) : undefined,
-              route: cardForm.route.trim(),
-              image: cardForm.image.trim() || c.image
-            };
-          }
-          return c;
+      const payload = {
+        id: (editingItem && (editingItem._id || editingItem.id)) ? (editingItem._id || editingItem.id) : Date.now().toString(),
+        title: cardForm.title.trim(),
+        subtitle: cardForm.subtitle.trim(),
+        price: cardForm.price.trim(),
+        route: cardForm.route.trim(),
+        image: cardForm.image.trim(),
+        isActive: true
+      };
+
+      try {
+        let updated = [];
+        if (editingItem && (editingItem._id || editingItem.id)) {
+          updated = servicesList.map(c => (c._id === editingItem._id || c.id === editingItem.id) ? { ...c, ...payload } : c);
+        } else {
+          payload.order = servicesList.length;
+          updated = [...servicesList, payload];
+        }
+
+        const res = await fetch('/api/admin/solar-water-solutions', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: updated, sectionTitle })
         });
-      } else {
-        const newCard = {
-          id: `solar-${Date.now()}`,
-          title: cardForm.title.trim(),
-          subtitle: cardForm.subtitle.trim(),
-          price: cardForm.price ? Number(cardForm.price) : undefined,
-          route: cardForm.route.trim() || '/services',
-          image: cardForm.image.trim() || 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=300&fit=crop'
-        };
-        updated = [...servicesList, newCard];
+        
+        if (res.ok) {
+          setServicesList(updated);
+          toast.success("Card saved as draft!");
+        } else {
+          toast.error('Failed to save card');
+        }
+      } catch (err) {
+        toast.error('Network error saving card');
       }
 
-      setServicesList(updated);
-      localStorage.setItem('admin_solarwater_services', JSON.stringify(updated));
       setShowModal(false);
-      toast.success(editingItem ? "Card updated live!" : "New solution card added!");
     };
 
     const scrollRef = useRef(null);
@@ -345,12 +325,22 @@ export default function SolarWaterSection() {
       reader.readAsDataURL(file);
     };
 
+    if (!isLoading && servicesList.length === 0 && !adminEditMode) {
+        return null;
+    }
+
     return (
         <section className="solar-water-section" style={{ position: 'relative' }}>
             <div className="solar-water-container">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h2 className="section-title" style={{ margin: 0 }}>{sectionTitle}</h2>
+                        <h2 className="section-title" style={{ margin: 0 }}>
+                          {isLoading ? (
+                            <span style={{display: 'inline-block', width: '200px', height: '28px', background: '#e2e8f0', borderRadius: '6px', animation: 'pulse 1.5s infinite'}}></span>
+                          ) : (
+                            sectionTitle
+                          )}
+                        </h2>
                         {isAdmin && adminEditMode && (
                           <button
                             onClick={() => {
@@ -375,22 +365,7 @@ export default function SolarWaterSection() {
 
                     {isAdmin && adminEditMode && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <button
-                          onClick={handleResetDefaults}
-                          style={{
-                            background: '#64748b',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '4px 10px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            cursor: 'pointer'
-                          }}
-                          title="Reset to default Solar & Water Solutions services"
-                        >
-                          ↺ Reset Defaults
-                        </button>
+
                         <button
                           onClick={handleOpenAddCard}
                           style={{
@@ -437,11 +412,16 @@ export default function SolarWaterSection() {
                     )}
 
                     <div className="solar-water-grid" ref={scrollRef} onScroll={checkScroll}>
-                    {servicesList.map((service, index) => (
-                        <div
+                    {isLoading ? (
+                        Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={`skeleton-${idx}`} className="solar-water-card" style={{ minHeight: '220px', background: '#e2e8f0', borderRadius: '16px', animation: 'pulse 1.5s infinite' }}></div>
+                        ))
+                    ) : (
+                        servicesList.map((service, index) => (
+                            <div
                             key={service.id || index}
                             className="solar-water-card"
-                            onClick={(e) => handleSmartCardNavigate(e, service.route || '/services')}
+                            onClick={(e) => handleSmartCardNavigate(e, service.route)}
                             style={{ cursor: 'pointer', paddingBottom: '20px', position: 'relative' }}
                         >
                             {isAdmin && adminEditMode && (
@@ -454,7 +434,7 @@ export default function SolarWaterSection() {
                                   ✏️
                                 </button>
                                 <button
-                                  onClick={(e) => handleDeleteCard(e, service.id)}
+                                  onClick={(e) => handleDeleteCard(e, service._id || service.id)}
                                   style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', width: '22px', height: '22px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   title="Delete Solution Card"
                                 >
@@ -463,9 +443,11 @@ export default function SolarWaterSection() {
                               </div>
                             )}
 
-                            <div className="solar-image">
-                                <img src={service.image} alt={service.title} />
-                            </div>
+                            {service.image && (
+                                <div className="solar-image">
+                                    <img src={service.image} alt={service.title} />
+                                </div>
+                            )}
                             <h3 style={{ marginTop: '16px' }}>{service.title}</h3>
                             <p>{service.subtitle}</p>
                             {service.price && (
@@ -474,14 +456,14 @@ export default function SolarWaterSection() {
                                 </p>
                             )}
                         </div>
-                    ))}
+                    )))}
                 </div>
                 </div>
             </div>
 
             {/* EDIT TITLE MODAL */}
             {showTitleModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowTitleModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '400px', width: '90%', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowTitleModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Edit Section Title</h3>
@@ -503,7 +485,7 @@ export default function SolarWaterSection() {
 
             {/* ADD / EDIT CARD MODAL */}
             {showModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '460px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>

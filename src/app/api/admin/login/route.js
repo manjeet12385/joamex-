@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { verifyAdminCredentials } from '@/lib/adminAuth';
 import { signJWT } from '@/lib/auth';
@@ -56,7 +57,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Admin password login error:', error);
     return NextResponse.json(
-      { error: 'Admin login failed. Invalid credentials.' },
+      { error: `Admin login failed: ${error.message}` },
       { status: 500 }
     );
   }

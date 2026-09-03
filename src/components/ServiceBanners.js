@@ -5,28 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const defaultFeatureBanners = [
-    {
-        id: 'banner-cleaning',
-        title: 'Professional Cleaning',
-        description: 'Get your home serviced and spotless with our expert deep cleaning services. Eco-friendly products and certified professionals.',
-        tags: ['Cockroach Control', 'Bed Bug Treatment', 'Mosquito Mesh'],
-        buttonText: 'Book Now',
-        route: '/services/home-cleaning',
-        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&h=500&fit=crop',
-        bannerClass: 'cleaning-banner'
-    },
-    {
-        id: 'banner-grooming',
-        title: "Men's Grooming & Massage",
-        description: 'Luxury salon experience at home. Expert stylists and professional massage therapists at your service.',
-        tags: ['Hair & Styling', 'Facial & Skincare', 'Body Spa'],
-        buttonText: 'Book Now',
-        route: '/services/men-haircut',
-        image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&h=500&fit=crop',
-        bannerClass: 'grooming-banner'
-    }
-];
+
 
 const PRESET_PAGES = [
     { name: '-- Select Existing Page / Category --', route: '' },
@@ -57,7 +36,7 @@ export default function ServiceBanners() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminEditMode, setAdminEditMode] = useState(false);
 
-    const [bannersList, setBannersList] = useState(defaultFeatureBanners);
+    const [bannersList, setBannersList] = useState([]);
     const [showBannerModal, setShowBannerModal] = useState(false);
     const [editingBanner, setEditingBanner] = useState(null);
     const [bannerForm, setBannerForm] = useState({
@@ -68,29 +47,24 @@ export default function ServiceBanners() {
         route: '/services',
         image: '',
         textColor: '#ffffff',
-        buttonBgColor: '#2563eb'
+        buttonBgColor: '#2563eb',
+        imageOnly: false
     });
 
-    const loadBanners = () => {
+    const loadBanners = async () => {
         try {
-            const stored = localStorage.getItem('admin_feature_banners');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length >= 2) {
-                    const fixed = parsed.map(b => {
-                        if (b.id === 'banner-grooming' && b.image && b.image.includes('581578731548')) {
-                            return { ...b, image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&h=500&fit=crop' };
-                        }
-                        return b;
-                    });
-                    setBannersList(fixed);
-                    return;
-                }
+            const isAdm = !!localStorage.getItem('adminUser');
+            const isEd = localStorage.getItem('admin_edit_mode') === 'true';
+            const mode = (isAdm && isEd) ? '?mode=draft' : '?mode=live';
+            
+            const res = await fetch('/api/admin/feature-banners' + mode);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.banners)) {
+                setBannersList(data.banners);
             }
         } catch (e) {
-            console.error('Failed loading feature banners:', e);
+            setBannersList([]);
         }
-        setBannersList(defaultFeatureBanners);
     };
 
     useEffect(() => {
@@ -129,7 +103,8 @@ export default function ServiceBanners() {
         route: '/services',
         image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop',
         textColor: '#ffffff',
-        buttonBgColor: '#2563eb'
+        buttonBgColor: '#2563eb',
+        imageOnly: false
       });
       setShowBannerModal(true);
     };
@@ -145,34 +120,47 @@ export default function ServiceBanners() {
         route: banner.route || '/services',
         image: banner.image || '',
         textColor: banner.textColor || '#ffffff',
-        buttonBgColor: banner.buttonBgColor || '#2563eb'
+        buttonBgColor: banner.buttonBgColor || '#2563eb',
+        imageOnly: banner.imageOnly || false
       });
       setShowBannerModal(true);
     };
 
-    const handleDeleteBanner = (e, bannerId) => {
+    const handleDeleteBanner = async (e, bannerId) => {
       e.stopPropagation();
       if (confirm("Delete this feature banner?")) {
-        const updated = bannersList.filter(b => b.id !== bannerId);
-        setBannersList(updated);
-        localStorage.setItem('admin_feature_banners', JSON.stringify(updated));
-        toast.success("Banner deleted!");
+        try {
+          const updated = bannersList.filter(b => (b._id || b.id) !== bannerId);
+          const res = await fetch('/api/admin/feature-banners', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ banners: updated, sectionTitle: 'Feature Banners' })
+          });
+          if (res.ok) {
+            setBannersList(updated);
+            toast.success("Banner deleted (saved as draft)!");
+          } else {
+            toast.error("Failed to delete banner");
+          }
+        } catch (err) {
+          toast.error('Failed to delete banner');
+        }
       }
     };
 
     const handleSmartCardNavigate = (e, route) => {
-      if (e) {
+      if (adminEditMode) {
         e.preventDefault();
-        e.stopPropagation();
+        return;
       }
-      if (!route) {
+      
+      const cleanRoute = route?.trim() || '';
+      
+      if (!cleanRoute) {
         router.push('/services');
         return;
       }
-      let cleanRoute = route.trim();
-      if (cleanRoute === '/ac' || cleanRoute === 'ac' || cleanRoute === '/services/ac') {
-        cleanRoute = '/ac-repair';
-      }
+
       const catMapping = {
         'electrician-plumber': 'electrician-plumber',
         'ac-appliance': 'ac-appliance',
@@ -217,7 +205,7 @@ export default function ServiceBanners() {
     };
 
     const handleStartCategoryLinking = () => {
-      const bannerId = editingBanner ? editingBanner.id : (bannersList[0]?.id || 'banner-cleaning');
+      const bannerId = editingBanner ? (editingBanner._id || editingBanner.id) : (bannersList[0]?.id || 'banner-cleaning');
       sessionStorage.setItem('linking_card_data', JSON.stringify({
         sectionType: 'banner',
         cardId: bannerId,
@@ -233,53 +221,67 @@ export default function ServiceBanners() {
       }
     };
 
-    const handleSaveBanner = (e) => {
+    const handleSaveBanner = async (e) => {
       e.preventDefault();
-      if (!bannerForm.title.trim()) return;
+      if (!bannerForm.imageOnly && !bannerForm.title.trim()) {
+        toast.error('Title is required for normal banners!');
+        return;
+      }
 
-      const tagArray = bannerForm.tags
+      let finalTitle = bannerForm.title.trim();
+      let finalDesc = bannerForm.description.trim();
+      let finalTags = bannerForm.tags;
+      
+      if (bannerForm.imageOnly) {
+         finalTitle = "";
+         finalDesc = "";
+         finalTags = "";
+      }
+
+      const tagArray = finalTags
         .split(',')
         .map(t => t.trim())
         .filter(t => t.length > 0);
 
-      let updated = [];
-      if (editingBanner) {
-        updated = bannersList.map(b => {
-          if (b.id === editingBanner.id) {
-            return {
-              ...b,
-              title: bannerForm.title.trim(),
-              description: bannerForm.description.trim(),
-              tags: tagArray,
-              buttonText: bannerForm.buttonText.trim() || 'Book Now',
-              route: bannerForm.route.trim(),
-              image: bannerForm.image.trim() || b.image,
-              textColor: bannerForm.textColor || '#ffffff',
-              buttonBgColor: bannerForm.buttonBgColor || '#2563eb'
-            };
-          }
-          return b;
+      const payload = {
+        id: (editingBanner && (editingBanner._id || editingBanner.id)) ? (editingBanner._id || editingBanner.id) : Date.now().toString(),
+        title: finalTitle,
+        subtitle: finalDesc,
+        tag: tagArray[0] || '',
+        route: bannerForm.route.trim(),
+        image: bannerForm.image.trim() || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop',
+        textColor: bannerForm.textColor,
+        buttonBgColor: bannerForm.buttonBgColor,
+        buttonText: bannerForm.buttonText,
+        isActive: true,
+        imageOnly: !!bannerForm.imageOnly
+      };
+
+      try {
+        let updated = [];
+        if (editingBanner && (editingBanner._id || editingBanner.id)) {
+          updated = bannersList.map(b => (b._id === editingBanner._id || b.id === editingBanner.id) ? { ...b, ...payload } : b);
+        } else {
+          payload.order = bannersList.length;
+          updated = [...bannersList, payload];
+        }
+
+        const res = await fetch('/api/admin/feature-banners', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ banners: updated, sectionTitle: 'Feature Banners' })
         });
-      } else {
-        const newBanner = {
-          id: `banner-${Date.now()}`,
-          title: bannerForm.title.trim(),
-          description: bannerForm.description.trim(),
-          tags: tagArray,
-          buttonText: bannerForm.buttonText.trim() || 'Book Now',
-          route: bannerForm.route.trim() || '/services',
-          image: bannerForm.image.trim() || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop',
-          textColor: bannerForm.textColor || '#ffffff',
-          buttonBgColor: bannerForm.buttonBgColor || '#2563eb',
-          bannerClass: 'custom-feature-banner'
-        };
-        updated = [...bannersList, newBanner];
+        if (res.ok) {
+          setBannersList(updated);
+          toast.success("Feature banner saved as draft!");
+        } else {
+          toast.error('Failed to save banner');
+        }
+      } catch (err) {
+        toast.error('Network error saving banner');
       }
 
-      setBannersList(updated);
-      localStorage.setItem('admin_feature_banners', JSON.stringify(updated));
       setShowBannerModal(false);
-      toast.success(editingBanner ? "Banner updated live!" : "New feature banner published!");
     };
 
     const handleImageUpload = (e) => {
@@ -289,6 +291,10 @@ export default function ServiceBanners() {
       reader.onloadend = () => setBannerForm(prev => ({ ...prev, image: reader.result }));
       reader.readAsDataURL(file);
     };
+
+    if (!adminEditMode && bannersList.length === 0) {
+        return null;
+    }
 
     return (
         <section className="service-banners" style={{ position: 'relative' }}>
@@ -386,7 +392,20 @@ export default function ServiceBanners() {
                   </h3>
 
                   <form onSubmit={handleSaveBanner}>
-                    <div style={{ marginBottom: '14px' }}>
+                    <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <input 
+                        type="checkbox" 
+                        id="imageOnly" 
+                        checked={bannerForm.imageOnly || false} 
+                        onChange={(e) => setBannerForm({ ...bannerForm, imageOnly: e.target.checked })} 
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <label htmlFor="imageOnly" style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', cursor: 'pointer' }}>Image Only Banner (Hide Title & Description)</label>
+                    </div>
+
+                    {!bannerForm.imageOnly && (
+                      <>
+                        <div style={{ marginBottom: '14px' }}>
                       <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Banner Heading / Title *</label>
                       <input
                         type="text"
@@ -419,6 +438,9 @@ export default function ServiceBanners() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                       />
                     </div>
+
+                      </>
+                    )}
 
                     <div style={{ marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                       <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>

@@ -5,17 +5,8 @@ import { useCart } from '@/context/CartContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { toast } from 'react-toastify';
-import { categories } from '../data/categories';
+// Hardcoded mock data removed in favor of real DB search
 import './Header.css';
-
-// Flatten subcategories to make them easily searchable
-const allServices = Object.entries(categories).flatMap(([categoryKey, category]) =>
-  category.subcategories.map(sub => ({
-    ...sub,
-    categoryName: category.name,
-    categoryKey
-  }))
-);
 
 export default function Header() {
   const { getCartCount } = useCart();
@@ -88,32 +79,12 @@ export default function Header() {
   const handlePublishGlobal = async () => {
     setIsPublishing(true);
     try {
-      const keysToSave = [
-        'admin_solarwater_title', 'admin_solarwater_services',
-        'admin_feature_banners', 'admin_offers_title',
-        'admin_most_booked_title', 'admin_most_booked_services',
-        'admin_renovation_title', 'admin_renovation_services',
-        'admin_hero_title', 'admin_hero_banners', 'admin_justdial_side_cards',
-        'admin_essential_title', 'admin_essential_services',
-        'admin_custom_categories', 'admin_custom_category_items'
-      ];
-      
-      const payload = {};
-      keysToSave.forEach(key => {
-        const val = localStorage.getItem(key);
-        if (val) {
-          try { payload[key] = JSON.parse(val); } catch(e) { payload[key] = val; }
-        }
-      });
-      
-      const res = await fetch('/api/site-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: payload })
-      });
+      // Publish all Drafts to Live via new API
+      const res = await fetch('/api/admin/publish-all', { method: 'POST' });
       
       if (res.ok) {
         toast.success('Website changes published live to all users!');
+        setTimeout(() => window.location.reload(), 1000);
       } else {
         toast.error('Failed to publish changes.');
       }
@@ -124,6 +95,9 @@ export default function Header() {
       setIsPublishing(false);
     }
   };
+
+
+
 
   // Live Location & Pincode Autocomplete search
   useEffect(() => {
@@ -141,14 +115,25 @@ export default function Header() {
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&addressdetails=1&limit=6`,
           { headers: { 'Accept-Language': 'en' } }
         );
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setLocationSuggestions(data);
-        } else {
+        
+        if (!res.ok) {
+          setLocationSuggestions([]);
+          return;
+        }
+
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (Array.isArray(data)) {
+            setLocationSuggestions(data);
+          } else {
+            setLocationSuggestions([]);
+          }
+        } catch (parseErr) {
           setLocationSuggestions([]);
         }
       } catch (err) {
-        console.error('Error fetching location suggestions:', err);
+        // Silently ignore network errors so Next.js overlay doesn't pop up
         setLocationSuggestions([]);
       } finally {
         setIsFetchingLocationSuggestions(false);
@@ -211,24 +196,27 @@ export default function Header() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchRef = useRef(null);
 
-  // Dynamic animated search placeholder (Urban Company style)
-  const searchPhrases = [
-    "AC Service",
-    "Sofa Cleaning",
-    "Electrician",
-    "Plumber",
-    "Salon for Women",
-    "Washing Machine Repair",
-    "Bathroom Cleaning",
-    "Water Purifier Service",
-    "Men's Haircut",
-    "Pest Control",
-    "Painter",
-    "Carpenter"
-  ];
-  const [animatedPlaceholder, setAnimatedPlaceholder] = useState("Search for 'AC Service'");
+  const [searchPhrases, setSearchPhrases] = useState(['services...']);
+  const [animatedPlaceholder, setAnimatedPlaceholder] = useState("Search for 'services...'");
 
+  // Fetch live categories for search placeholder
   useEffect(() => {
+    fetch('/api/admin/categories?mode=live')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.success && data.categories?.length > 0) {
+          const names = data.categories.map(c => c.name);
+          setSearchPhrases(names);
+          setAnimatedPlaceholder(`Search for '${names[0]}'`);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  // Dynamic animated search placeholder (Urban Company style)
+  useEffect(() => {
+    if (!searchPhrases || searchPhrases.length === 0) return;
+    
     let phraseIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
@@ -236,6 +224,7 @@ export default function Header() {
 
     const animatePlaceholder = () => {
       const currentPhrase = searchPhrases[phraseIndex];
+      if (!currentPhrase) return;
 
       if (!isDeleting) {
         charIndex++;
@@ -263,7 +252,7 @@ export default function Header() {
     timerId = setTimeout(animatePlaceholder, 1000);
 
     return () => clearTimeout(timerId);
-  }, []);
+  }, [searchPhrases]);
 
   // Live Search: Query MongoDB Categories, Offers, Services & Custom items in real-time
   useEffect(() => {
@@ -277,84 +266,33 @@ export default function Header() {
     const fetchLiveSearchResults = async () => {
       let liveResults = [];
 
-      // 1. Search in static/local services first
-      const localMatches = allServices.filter(service =>
-        service.name?.toLowerCase().includes(query) ||
-        service.categoryName?.toLowerCase().includes(query)
-      );
-      liveResults.push(...localMatches);
-
-      // 2. Search in MongoDB Categories API
+      // 1. Search ONLY in MongoDB Categories API Concurrently
       try {
-        const catRes = await fetch(`/api/admin/categories?search=${encodeURIComponent(query)}`);
-        const catData = await catRes.json();
-        if (catData.success && Array.isArray(catData.categories)) {
-          catData.categories.forEach(c => {
-            if (c.name?.toLowerCase().includes(query) || c.description?.toLowerCase().includes(query)) {
-              liveResults.push({
-                name: c.name,
-                categoryName: 'Category',
-                icon: c.image || c.icon || '📁',
-                route: `/services/${c.slug || c._id}`
-              });
-            }
-
-            if (Array.isArray(c.subcategories)) {
-              c.subcategories.forEach(sub => {
-                if (String(sub).toLowerCase().includes(query)) {
-                  liveResults.push({
-                    name: String(sub),
-                    categoryName: c.name,
-                    icon: c.image || c.icon || '📁',
-                    route: `/services/${c.slug || c._id}`
-                  });
-                }
-              });
-            }
-          });
-        }
-      } catch (err) {
-        console.error('Category search error:', err);
-      }
-
-      // 3. Search in MongoDB Offers API
-      try {
-        const offerRes = await fetch('/api/offers');
-        if (offerRes.ok) {
-          const offers = await offerRes.json();
-          if (Array.isArray(offers)) {
-            offers.forEach(o => {
-              if (o.title?.toLowerCase().includes(query) || o.subtitle?.toLowerCase().includes(query)) {
+        const catRes = await fetch('/api/admin/categories?mode=live');
+        if (catRes.ok) {
+          const catData = await catRes.json();
+          if (catData?.success && Array.isArray(catData.categories)) {
+            catData.categories.forEach(c => {
+              const nameLower = c.name?.toLowerCase() || '';
+              const descLower = c.description?.toLowerCase() || '';
+              
+              // Check if any word in the name or description starts with the query
+              const matchWord = (text, q) => text.split(/\s+/).some(word => word.startsWith(q));
+              
+              if (matchWord(nameLower, query) || matchWord(descLower, query)) {
                 liveResults.push({
-                  name: o.title,
-                  categoryName: `Offer (${o.badge || 'Special'})`,
-                  icon: o.image || '🏷️',
-                  route: o.route || '/services'
+                  name: c.name,
+                  categoryName: 'Category',
+                  icon: c.image || c.icon || '📁',
+                  route: `/services/${c.slug || c._id}`
                 });
               }
             });
           }
         }
       } catch (err) {
-        console.error('Offer search error:', err);
+        console.error('Category search error:', err);
       }
-
-      // 4. Search in admin_custom_categories from localStorage
-      try {
-        const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-        if (Array.isArray(customCats)) {
-          customCats.forEach(c => {
-            if (c.label?.toLowerCase().includes(query) || c.key?.toLowerCase().includes(query)) {
-              liveResults.push({
-                name: c.label,
-                categoryName: 'Custom Category',
-                icon: c.image || '📁',
-                route: `/services/${c.key}`
-              });
-            }
-          });
-        }
-      } catch (err) {}
 
       // Deduplicate results by name
       const uniqueResults = [];
@@ -623,17 +561,20 @@ export default function Header() {
         {/* RIGHT ACTIONS */}
         <div className="header-actions">
           {isAdminEditMode && (
-            <button 
-              onClick={handlePublishGlobal} 
-              disabled={isPublishing}
-              style={{
-                backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px',
-                borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)'
-              }}
-            >
-              {isPublishing ? 'Publishing...' : '💾 Publish to Live'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+
+              <button 
+                onClick={handlePublishGlobal} 
+                disabled={isPublishing}
+                style={{
+                  backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px',
+                  borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                  boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)'
+                }}
+              >
+                {isPublishing ? 'Publishing...' : '🚀 Publish to Live'}
+              </button>
+            </div>
           )}
 
           <button className="location-btn" onClick={() => setIsLocationModalOpen(true)} title="Select or search location">

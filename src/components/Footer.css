@@ -104,63 +104,58 @@
 
 /* COLORFUL SOCIAL ICON STYLES */
 .social-icons a.twitter {
-  background: #e0f2fe;
-  color: #0284c7;
-  border-color: #bae6fd;
+  background: #1DA1F2;
+  color: #ffffff;
+  border-color: transparent;
 }
 .social-icons a.twitter:hover {
-  background: #0284c7;
-  color: #ffffff;
-  border-color: #0284c7;
+  filter: brightness(1.1);
   transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.3);
 }
 
 .social-icons a.facebook {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border-color: #bfdbfe;
+  background: #1877F2;
+  color: #ffffff;
+  border-color: transparent;
 }
 .social-icons a.facebook:hover {
-  background: #1d4ed8;
-  color: #ffffff;
-  border-color: #1d4ed8;
+  filter: brightness(1.1);
   transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
 }
 
 .social-icons a.instagram {
-  background: #fce7f3;
-  color: #db2777;
-  border-color: #fbcfe8;
-}
-.social-icons a.instagram:hover {
   background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   color: #ffffff;
   border-color: transparent;
+}
+.social-icons a.instagram:hover {
+  filter: brightness(1.1);
   transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(220, 39, 67, 0.3);
 }
 
 .social-icons a.linkedin {
-  background: #e0e7ff;
-  color: #0369a1;
-  border-color: #c7d2fe;
-}
-.social-icons a.linkedin:hover {
   background: #0a66c2;
   color: #ffffff;
-  border-color: #0a66c2;
+  border-color: transparent;
+}
+.social-icons a.linkedin:hover {
+  filter: brightness(1.1);
   transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
 }
 
 .social-icons a.youtube {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: #FF0000;
+  color: #ffffff;
+  border-color: transparent;
 }
 .social-icons a.youtube:hover {
-  background: #dc2626;
-  color: #ffffff;
-  border-color: #dc2626;
+  filter: brightness(1.1);
   transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
 }
 
 .social-icons a svg {

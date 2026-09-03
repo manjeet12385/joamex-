@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../../../context/CartContext';
 import { toast } from 'react-toastify';
+import Header from '@/components/Header';
 import './style.css';
 
 const servicesData = [
@@ -175,7 +176,8 @@ export default function AntsAndBedBugsPage() {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminEditMode, setAdminEditMode] = useState(false);
-  const [servicesList, setServicesList] = useState(servicesData);
+  const [servicesList, setServicesList] = useState([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Top Banner & Page Header State
   const [headerInfo, setHeaderInfo] = useState({
@@ -185,7 +187,7 @@ export default function AntsAndBedBugsPage() {
     bookings: '86K bookings',
     buttonText: 'View Services',
     bannerSubtitle: "Here's how the service is done",
-    bannerImage: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=80'
+    bannerImage: ''
   });
   const [showBannerModal, setShowBannerModal] = useState(false);
 
@@ -252,6 +254,8 @@ export default function AntsAndBedBugsPage() {
         console.error(e);
       }
     }
+
+    setIsDataLoaded(true);
 
     window.addEventListener('storage', checkAdmin);
     window.addEventListener('focus', checkAdmin);
@@ -498,8 +502,20 @@ export default function AntsAndBedBugsPage() {
     toast.success(`Added ${item.name} to cart!`);
   };
 
+  if (!isDataLoaded) {
+    return (
+      <div className="bridal-makeup-page-wrapper" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <Header />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '16px', fontWeight: '600' }}>
+          Loading Details...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bridal-makeup-page-wrapper">
+      <Header />
       {/* Main Grid Container (3 Columns) */}
       <div className="bridal-makeup-container" style={{ paddingTop: '24px' }}>
 
@@ -895,7 +911,7 @@ export default function AntsAndBedBugsPage() {
 
       {/* ON-PAGE ADMIN PACKAGE MODAL */}
       {showPackageModal && (
-        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowPackageModal(false)}>
+        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '520px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
             <button onClick={() => setShowPackageModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
@@ -1054,7 +1070,7 @@ export default function AntsAndBedBugsPage() {
 
       {/* EDIT TOP BANNER & HEADER MODAL */}
       {showBannerModal && (
-        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowBannerModal(false)}>
+        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '480px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
             <button onClick={() => setShowBannerModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
@@ -1129,11 +1145,11 @@ export default function AntsAndBedBugsPage() {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Showcase Banner Photo / Video</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Showcase Banner Photo</label>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <input
                     type="text"
-                    placeholder="Paste Photo / Video URL or upload →"
+                    placeholder="Paste Photo URL or upload →"
                     value={headerInfo.bannerImage}
                     onChange={(e) => setHeaderInfo({ ...headerInfo, bannerImage: e.target.value })}
                     style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', minWidth: '180px' }}
@@ -1141,10 +1157,6 @@ export default function AntsAndBedBugsPage() {
                   <label style={{ padding: '10px 12px', background: '#3b82f6', color: '#ffffff', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', whiteSpace: 'nowrap' }}>
                     📷 Upload Photo
                     <input type="file" accept="image/*" onChange={handleBannerImageUpload} style={{ display: 'none' }} />
-                  </label>
-                  <label style={{ padding: '10px 12px', background: '#8b5cf6', color: '#ffffff', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                    🎥 Upload Video
-                    <input type="file" accept="video/*" onChange={handleBannerImageUpload} style={{ display: 'none' }} />
                   </label>
                   {headerInfo.bannerImage && (
                     <button
@@ -1171,7 +1183,7 @@ export default function AntsAndBedBugsPage() {
 
       {/* EDIT SIDEBAR CATEGORY MODAL */}
       {showCategoryModal && (
-        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowCategoryModal(false)}>
+        <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '440px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
             <button onClick={() => setShowCategoryModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>

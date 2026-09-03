@@ -63,7 +63,7 @@ export default function WashingMachinePage() {
   // --- Admin State ---
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminEditMode, setAdminEditMode] = useState(false);
-  const [servicesList, setServicesList] = useState(washingMachineServices);
+  const [servicesList, setServicesList] = useState([]);
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [packageForm, setPackageForm] = useState({

@@ -4,6 +4,8 @@ import connectToDatabase from '@/backend/config/db';
 import Booking from '@/backend/models/Booking';
 import Partner from '@/backend/models/Partner';
 import { verifyJWT } from '@/backend/services/authService';
+import { findMatchForBooking, dispatchJob } from '@/backend/services/dispatchService';
+import { processRevenueSplit } from '@/backend/services/financialService';
 
 export async function createBookingController(request) {
     try {
@@ -49,8 +51,24 @@ export async function createBookingController(request) {
             category,
             status: 'Pending',
             paymentStatus: paymentMethod === 'Online' ? 'Paid' : 'Pay After Service (COD)',
+            paymentMethod: paymentMethod === 'Online' ? 'Online' : 'COD',
             scheduledDate,
             scheduledTimeSlot
+        });
+
+        // Trigger Automated Matchmaking & Dispatch
+        // We do this asynchronously so it doesn't block the user's booking confirmation
+        setImmediate(async () => {
+            try {
+                const match = await findMatchForBooking(category, addressObj?.lat, addressObj?.lng);
+                if (match) {
+                    await dispatchJob(newBooking._id, match._id);
+                } else {
+                    console.log(`[DISPATCH] No online partners available for category ${category}`);
+                }
+            } catch (dispatchErr) {
+                console.error("Auto-dispatch failed:", dispatchErr);
+            }
         });
 
         return NextResponse.json({ success: true, bookingId: newBooking._id, booking: newBooking });
@@ -187,6 +205,17 @@ export async function updateBookingController(request) {
 
             booking.status = 'Completed';
             await booking.save();
+            
+            // Process Commission & Revenue Split
+            try {
+                const financials = await processRevenueSplit(booking._id);
+                console.log(`[FINANCE] Revenue split processed for ${booking._id}:`, financials);
+            } catch (financeError) {
+                console.error(`[FINANCE] Error splitting revenue for ${booking._id}:`, financeError);
+                // We still return success for completion even if wallet update fails, 
+                // but in production we'd want a retry mechanism or transaction rollback.
+            }
+
             return NextResponse.json({ success: true, message: 'Work completed successfully', booking });
         }
 

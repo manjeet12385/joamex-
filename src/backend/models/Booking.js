@@ -39,10 +39,40 @@ const BookingSchema = new mongoose.Schema({
     scheduledDate: String,
     scheduledTimeSlot: String,
     partner: {
-        id: String,
+        id: mongoose.Schema.Types.ObjectId,
         name: String,
         phone: String
-    }
+    },
+    jobStartOtp: String,
+    jobEndOtp: String,
+    
+    partnerLocation: {
+        lat: Number,
+        lng: Number
+    },
+    trackingStatus: {
+        type: String,
+        enum: ['Pending', 'Dispatched', 'Arrived', 'Started', 'Completed'],
+        default: 'Pending'
+    },
+    
+    proofOfWork: {
+        beforeImages: [String],
+        afterImages: [String]
+    },
+    
+    // Financials
+    commissionCut: { type: Number, default: 0 },
+    partnerEarnings: { type: Number, default: 0 },
+    vendorEarnings: { type: Number, default: 0 },
+    
+    // Payments
+    paymentMethod: {
+        type: String,
+        enum: ['COD', 'Online'],
+        default: 'COD'
+    },
+    paymentGatewayTransactionId: String,
 }, { timestamps: true });
 
 BookingSchema.index({ status: 1, createdAt: -1 });

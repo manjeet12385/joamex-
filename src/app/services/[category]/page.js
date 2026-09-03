@@ -9,15 +9,7 @@ import 'react-quill-new/dist/quill.snow.css';
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import CarpenterPage from '@/app/carpenter/page';
-import ElectricianPage from '@/app/electrician/page';
-import PlumberPage from '@/app/plumber/page';
-import FestivalLightsPage from '@/app/festival-lights/page';
-import FanInstallationPage from '@/app/fan-installation/page';
-import FurnitureAssemblyPage from '@/app/furniture-assembly/page';
-import BridalMakeupPage from '@/app/services/bridal-makeup/page';
-import BedBugsPage from '@/app/services/bed-bugs/page';
-import AcRepairPage from '@/app/ac-repair/page';
+
 import '../bridal-makeup/style.css';
 import '../services.css';
 
@@ -27,15 +19,7 @@ export default function ServicePage() {
     const categoryKey = params.category;
     const { addToCart, cart, getCartTotal, updateQuantity } = useCart();
     
-    if (categoryKey === 'carpenter') return <CarpenterPage />;
-    if (categoryKey === 'electrician') return <ElectricianPage />;
-    if (categoryKey === 'plumber') return <PlumberPage />;
-    if (categoryKey === 'festival-lights' || categoryKey === 'festival-lights-installation') return <FestivalLightsPage />;
-    if (categoryKey === 'fan-installation') return <FanInstallationPage />;
-    if (categoryKey === 'furniture-assembly' || categoryKey === 'ikea-furniture') return <FurnitureAssemblyPage />;
-    if (categoryKey === 'bridal-makeup' || categoryKey === 'bridal-makeup-salon') return <BridalMakeupPage />;
-    if (categoryKey === 'bed-bugs' || categoryKey === 'ants-bed-bugs') return <BedBugsPage />;
-    if (categoryKey === 'ac-repair' || categoryKey === 'ac') return <AcRepairPage />;
+
 
     // Generate formatted title from slug
     const formattedTitle = categoryKey
@@ -45,6 +29,7 @@ export default function ServicePage() {
     // State for dynamic content
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminEditMode, setAdminEditMode] = useState(false);
+    const [dbCategoryId, setDbCategoryId] = useState(null);
 
     const [headerInfo, setHeaderInfo] = useState({
       title: formattedTitle,
@@ -53,7 +38,7 @@ export default function ServicePage() {
       bookings: '50K bookings',
       buttonText: 'View Services',
       bannerSubtitle: `Professional ${formattedTitle} Services at Home`,
-      bannerImage: '/home-cleaning-banner.png'
+      bannerImage: ''
     });
     const [showBannerModal, setShowBannerModal] = useState(false);
     const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -94,7 +79,8 @@ export default function ServicePage() {
       }
     ];
 
-    const [servicesList, setServicesList] = useState(defaultData);
+    const [servicesList, setServicesList] = useState([]);
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
     const [activeSection, setActiveSection] = useState('packages');
 
     // View Details Modal State
@@ -108,6 +94,7 @@ export default function ServicePage() {
 
     // Package Modal State
     const [showPackageModal, setShowPackageModal] = useState(false);
+    const [packageEditMode, setPackageEditMode] = useState('full');
     const [targetSectionId, setTargetSectionId] = useState('packages');
     const [editingItem, setEditingItem] = useState(null);
     const [packageForm, setPackageForm] = useState({
@@ -124,6 +111,34 @@ export default function ServicePage() {
       image: ''
     });
 
+    const saveCategoryToDB = async (updatedHeader, updatedList) => {
+      // Sync to localStorage
+      if (updatedHeader) {
+        localStorage.setItem(`admin_service_${categoryKey}_header`, JSON.stringify(updatedHeader));
+      }
+      if (updatedList) {
+        localStorage.setItem(`admin_service_${categoryKey}_data`, JSON.stringify(updatedList));
+      }
+
+      // Sync to MongoDB Category document
+      const targetId = categoryKey;
+      if (targetId) {
+        try {
+          const payload = {};
+          if (updatedHeader) payload.headerInfo = updatedHeader;
+          if (updatedList) payload.servicesList = updatedList;
+
+          await fetch(`/api/admin/categories/${targetId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } catch (err) {
+          console.error('Failed to save category details to MongoDB:', err);
+        }
+      }
+    };
+
     useEffect(() => {
       const checkAdmin = () => {
         const adminUser = localStorage.getItem('adminUser');
@@ -137,30 +152,96 @@ export default function ServicePage() {
       checkAdmin();
       const interval = setInterval(checkAdmin, 500);
 
-      const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
-      if (storedHeader) {
+      // Fetch category from MongoDB API by slug/id
+      const fetchCategory = async () => {
         try {
-          const parsed = JSON.parse(storedHeader);
-          if (parsed && (parsed.bannerImage === '/baglamukhi-banner.jpg' || !parsed.bannerImage)) {
-            parsed.bannerImage = '/home-cleaning-banner.png';
-          }
-          setHeaderInfo(parsed);
-        } catch (e) {
-          console.error(e);
-        }
-      }
+          const res = await fetch(`/api/admin/categories/${categoryKey}`);
+          const json = await res.json();
+          if (json.success && json.category) {
+            setDbCategoryId(json.category._id);
+            
+            let finalHeader = json.category.headerInfo;
+            let finalServices = json.category.servicesList;
+            let needsSync = false;
 
-      const storedData = localStorage.getItem(`admin_service_${categoryKey}_data`);
-      if (storedData) {
-        try {
-          const parsed = JSON.parse(storedData);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setServicesList(parsed);
+            // Priority: MongoDB Database -> LocalStorage -> Fallback Defaults
+            if (json.category.headerInfo) {
+              setHeaderInfo(json.category.headerInfo);
+            } else {
+              const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
+              if (storedHeader) {
+                try {
+                  const parsed = JSON.parse(storedHeader);
+                  if (parsed && (parsed.bannerImage === '/baglamukhi-banner.jpg' || !parsed.bannerImage)) {
+                    parsed.bannerImage = '/home-cleaning-banner.png';
+                  }
+                  setHeaderInfo(parsed);
+                  finalHeader = parsed;
+                  needsSync = true;
+                } catch(e) {}
+              }
+            }
+            
+            if (Array.isArray(json.category.servicesList) && json.category.servicesList.length > 0) {
+              setServicesList(json.category.servicesList);
+            } else {
+              const storedData = localStorage.getItem(`admin_service_${categoryKey}_data`);
+              if (storedData) {
+                try {
+                  const parsed = JSON.parse(storedData);
+                  if (Array.isArray(parsed) && parsed.length > 0) {
+                    setServicesList(parsed);
+                    finalServices = parsed;
+                    needsSync = true;
+                  }
+                } catch(e) {}
+              }
+            }
+            // Only display from DB — no auto-write to MongoDB from localStorage
+          } else {
+            // Category missing in DB — only show from localStorage if available, do NOT write to MongoDB
+            const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
+            const storedData = localStorage.getItem(`admin_service_${categoryKey}_data`);
+            if (storedHeader) {
+              try {
+                const parsed = JSON.parse(storedHeader);
+                if (parsed) setHeaderInfo(parsed);
+              } catch(e) {}
+            }
+            if (storedData) {
+              try {
+                const parsed = JSON.parse(storedData);
+                if (Array.isArray(parsed) && parsed.length > 0) setServicesList(parsed);
+              } catch(e) {}
+            }
           }
         } catch (e) {
-          console.error(e);
+          console.error("Failed to fetch category from DB API:", e);
+          const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
+          if (storedHeader) {
+            try {
+              const parsed = JSON.parse(storedHeader);
+              if (parsed && (parsed.bannerImage === '/baglamukhi-banner.jpg' || !parsed.bannerImage)) {
+                parsed.bannerImage = '/home-cleaning-banner.png';
+              }
+              setHeaderInfo(parsed);
+            } catch (err) {}
+          }
+          const storedData = localStorage.getItem(`admin_service_${categoryKey}_data`);
+          if (storedData) {
+            try {
+              const parsed = JSON.parse(storedData);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setServicesList(parsed);
+              }
+            } catch (err) {}
+          }
+        } finally {
+          setIsDataLoaded(true);
         }
-      }
+      };
+
+      fetchCategory();
 
       window.addEventListener('storage', checkAdmin);
       window.addEventListener('focus', checkAdmin);
@@ -171,11 +252,11 @@ export default function ServicePage() {
         window.removeEventListener('focus', checkAdmin);
         window.removeEventListener('admin_edit_mode_changed', checkAdmin);
       };
-    }, [categoryKey]);
+    }, [categoryKey, dbCategoryId]);
 
     const handleSaveBanner = (e) => {
       e.preventDefault();
-      localStorage.setItem(`admin_service_${categoryKey}_header`, JSON.stringify(headerInfo));
+      saveCategoryToDB(headerInfo, servicesList);
       setShowBannerModal(false);
       toast.success("Banner updated live!");
     };
@@ -208,7 +289,7 @@ export default function ServicePage() {
       if (confirm("Delete this category section and all its packages?")) {
         const updated = servicesList.filter(c => c.id !== catId);
         setServicesList(updated);
-        localStorage.setItem(`admin_service_${categoryKey}_data`, JSON.stringify(updated));
+        saveCategoryToDB(headerInfo, updated);
         toast.success("Category deleted!");
       }
     };
@@ -237,7 +318,7 @@ export default function ServicePage() {
       }
 
       setServicesList(updated);
-      localStorage.setItem(`admin_service_${categoryKey}_data`, JSON.stringify(updated));
+      saveCategoryToDB(headerInfo, updated);
       setShowCategoryModal(false);
       toast.success(editingCategory ? "Category updated!" : "New category added!");
     };
@@ -254,6 +335,7 @@ export default function ServicePage() {
     const handleOpenAddPackage = (sectionId) => {
       setTargetSectionId(sectionId);
       setEditingItem(null);
+      setPackageEditMode('full');
       setPackageForm({
         displayType: 'standard',
         name: '',
@@ -271,10 +353,11 @@ export default function ServicePage() {
       setShowPackageModal(true);
     };
 
-    const handleOpenEditPackage = (e, sectionId, item) => {
+    const handleOpenEditPackage = (e, sectionId, item, mode = 'full') => {
       e.stopPropagation();
       setTargetSectionId(sectionId);
       setEditingItem(item);
+      setPackageEditMode(mode);
       setPackageForm({
         displayType: item.displayType || 'standard',
         name: item.name || '',
@@ -305,7 +388,7 @@ export default function ServicePage() {
           return sec;
         });
         setServicesList(updated);
-        localStorage.setItem(`admin_service_${categoryKey}_data`, JSON.stringify(updated));
+        saveCategoryToDB(headerInfo, updated);
         toast.success("Item deleted!");
       }
     };
@@ -313,10 +396,6 @@ export default function ServicePage() {
     const handleSavePackage = (e) => {
       e.preventDefault();
       const isBanner = packageForm.displayType === 'banner';
-      if (!isBanner && (!packageForm.name.trim() || !packageForm.price)) {
-        toast.error("Please enter Package Title and Price");
-        return;
-      }
 
       const bulletList = packageForm.bullets
         .split('\n')
@@ -332,17 +411,17 @@ export default function ServicePage() {
                 return {
                   ...item,
                   displayType: packageForm.displayType || 'standard',
-                  name: packageForm.name.trim() || 'Special Offer Banner',
+                  name: packageForm.name.trim(),
                   price: Number(packageForm.price) || 0,
                   originalPrice: packageForm.originalPrice ? Number(packageForm.originalPrice) : undefined,
                   badge: packageForm.badge.trim(),
                   bestSeller: packageForm.isBestseller,
-                  rating: packageForm.rating.trim() || '4.8',
-                  reviews: packageForm.reviews.trim() || '5K',
+                  rating: packageForm.rating.trim(),
+                  reviews: packageForm.reviews.trim(),
                   duration: packageForm.duration.trim(),
-                  bullets: bulletList.length > 0 ? bulletList : ['Quality service guarantee'],
+                  bullets: bulletList,
                   details: packageForm.details || '',
-                  image: packageForm.image.trim() || item.image
+                  image: packageForm.image.trim()
                 };
               }
               return item;
@@ -351,17 +430,17 @@ export default function ServicePage() {
             const newItem = {
               id: `pkg-${Date.now()}`,
               displayType: packageForm.displayType || 'standard',
-              name: packageForm.name.trim() || 'Special Offer Banner',
+              name: packageForm.name.trim(),
               price: Number(packageForm.price) || 0,
               originalPrice: packageForm.originalPrice ? Number(packageForm.originalPrice) : undefined,
               badge: packageForm.badge.trim(),
               bestSeller: packageForm.isBestseller,
-              rating: packageForm.rating.trim() || '4.8',
-              reviews: packageForm.reviews.trim() || '5K',
+              rating: packageForm.rating.trim(),
+              reviews: packageForm.reviews.trim(),
               duration: packageForm.duration.trim(),
-              bullets: bulletList.length > 0 ? bulletList : ['Quality service guarantee'],
+              bullets: bulletList,
               details: packageForm.details || '',
-              image: packageForm.image.trim() || 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=300&h=300&fit=crop&q=80'
+              image: packageForm.image.trim()
             };
             updatedItems = [...sec.items, newItem];
           }
@@ -371,7 +450,7 @@ export default function ServicePage() {
       });
 
       setServicesList(updated);
-      localStorage.setItem(`admin_service_${categoryKey}_data`, JSON.stringify(updated));
+      saveCategoryToDB(headerInfo, updated);
       setShowPackageModal(false);
       toast.success(editingItem ? "Package updated!" : "Package added!");
     };
@@ -409,6 +488,17 @@ export default function ServicePage() {
     };
 
     const activeCatObj = servicesList.find(c => c.id === activeSection) || servicesList[0];
+
+    if (!isDataLoaded) {
+      return (
+        <div className="bridal-makeup-page-wrapper" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <Header />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '16px', fontWeight: '600' }}>
+            Loading Details...
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="bridal-makeup-page-wrapper">
@@ -535,8 +625,7 @@ export default function ServicePage() {
           {/* CENTER COLUMN: Top Hero Banner + Service Package Blocks */}
           <div className="services-main-content" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
-            {/* Image Banner Showcase */}
-            <div className="full-home-video-card" style={{ width: '100%', position: 'relative', margin: 0, maxWidth: '100%' }}>
+            <div className="category-hero-video-card" style={{ width: '100%', position: 'relative', margin: 0, maxWidth: '100%', height: '220px', borderRadius: '12px', overflow: 'hidden' }}>
               {isAdmin && adminEditMode && (
                 <button
                   onClick={() => setShowBannerModal(true)}
@@ -573,7 +662,7 @@ export default function ServicePage() {
                       muted={isVideoMuted}
                       loop
                       playsInline
-                      className="video-poster-img"
+                      className="category-hero-banner-img"
                       style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '12px', display: 'block' }}
                     />
                     <button
@@ -639,7 +728,8 @@ export default function ServicePage() {
                   <img 
                     src={headerInfo.bannerImage} 
                     alt={headerInfo.bannerSubtitle}
-                    className="video-poster-img"
+                    className="category-hero-banner-img"
+                    style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '12px', display: 'block' }}
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = '/home-cleaning-banner.png';
@@ -647,7 +737,7 @@ export default function ServicePage() {
                   />
                 )
               ) : (
-                <div className="video-poster-img" style={{ width: '100%', height: '140px', background: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: '700', fontSize: '13px' }}>
+                <div className="category-hero-banner-img" style={{ width: '100%', height: '140px', background: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: '700', fontSize: '13px' }}>
                   📷 No Banner Media Selected
                 </div>
               )}
@@ -741,13 +831,15 @@ export default function ServicePage() {
                             )}
 
                             {/* Top Big Offer Banner Image */}
-                            <div style={{ width: '100%', height: '220px', overflow: 'hidden', background: '#f8fafc' }}>
-                              <img
-                                src={item.image}
-                                alt={item.name || 'Special Offer Banner'}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                              />
-                            </div>
+                            {item.image && (
+                              <div style={{ width: '100%', height: '220px', overflow: 'hidden', background: '#f8fafc' }}>
+                                <img
+                                  src={item.image}
+                                  alt={item.name || 'Special Offer Banner'}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                />
+                              </div>
+                            )}
 
                             {/* Package Info Content Below Banner */}
                             <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
@@ -893,9 +985,11 @@ export default function ServicePage() {
                           </div>
 
                           <div className="package-image-side" style={{ position: 'relative', width: '120px', height: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div className="package-img-wrapper" style={{ width: '120px', height: '100px', borderRadius: '12px', overflow: 'hidden' }}>
-                              <img src={item.image} alt={item.name} className="package-img" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            </div>
+                            {item.image && (
+                              <div className="package-img-wrapper" style={{ width: '120px', height: '100px', borderRadius: '12px', overflow: 'hidden' }}>
+                                <img src={item.image} alt={item.name} className="package-img" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            )}
                             {qty > 0 ? (
                               <div className="quantity-adjuster-btn">
                                 <button className="qty-btn" onClick={() => updateQuantity(item.id, qty - 1)}>-</button>
@@ -929,7 +1023,7 @@ export default function ServicePage() {
           </div>
 
           {/* Right Sidebar - UC Promise */}
-          <div className="right-sidebar">
+          <div className="makeup-right-sidebar">
             <div className="uc-promise-card">
               <div className="promise-title">UC Promise</div>
               <ul className="promise-list">
@@ -952,7 +1046,7 @@ export default function ServicePage() {
 
         {/* EDIT TOP BANNER & HEADER MODAL */}
         {showBannerModal && (
-          <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowBannerModal(false)}>
+          <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
             <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '480px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
               <button onClick={() => setShowBannerModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
               <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
@@ -1026,11 +1120,11 @@ export default function ServicePage() {
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Showcase Banner Photo / Video</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Showcase Banner Photo</label>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <input
                       type="text"
-                      placeholder="Paste Photo / Video URL or upload →"
+                      placeholder="Paste Photo URL or upload →"
                       value={headerInfo.bannerImage}
                       onChange={(e) => setHeaderInfo({ ...headerInfo, bannerImage: e.target.value })}
                       style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', minWidth: '180px' }}
@@ -1038,10 +1132,6 @@ export default function ServicePage() {
                     <label style={{ padding: '10px 12px', background: '#3b82f6', color: '#ffffff', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', whiteSpace: 'nowrap' }}>
                       📷 Upload Photo
                       <input type="file" accept="image/*" onChange={handleBannerImageUpload} style={{ display: 'none' }} />
-                    </label>
-                    <label style={{ padding: '10px 12px', background: '#8b5cf6', color: '#ffffff', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                      🎥 Upload Video
-                      <input type="file" accept="video/*" onChange={handleBannerImageUpload} style={{ display: 'none' }} />
                     </label>
                     {headerInfo.bannerImage && (
                       <button
@@ -1068,7 +1158,7 @@ export default function ServicePage() {
 
         {/* EDIT SIDEBAR CATEGORY MODAL */}
         {showCategoryModal && (
-          <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowCategoryModal(false)}>
+          <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
             <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '440px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
               <button onClick={() => setShowCategoryModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
               <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
@@ -1105,31 +1195,7 @@ export default function ServicePage() {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Section Top Offer Banner (Optional Image at Top)</label>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      placeholder="Paste Banner Image URL or upload →"
-                      value={categoryForm.banner || ''}
-                      onChange={(e) => setCategoryForm({ ...categoryForm, banner: e.target.value })}
-                      style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                    />
-                    <label style={{ padding: '10px 14px', background: '#6366f1', color: '#ffffff', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                      Upload Banner
-                      <input type="file" accept="image/*" onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (uploadEvent) => {
-                            setCategoryForm({ ...categoryForm, banner: uploadEvent.target.result });
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }} style={{ display: 'none' }} />
-                    </label>
-                  </div>
-                </div>
+
 
                 <button
                   type="submit"
@@ -1144,14 +1210,16 @@ export default function ServicePage() {
 
         {/* ON-PAGE ADMIN PACKAGE MODAL */}
         {showPackageModal && (
-          <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowPackageModal(false)}>
+          <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
             <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '520px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
               <button onClick={() => setShowPackageModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
               <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
-                {editingItem ? "Edit Service Package & Discounts" : "Add New Service Package"}
+                {packageEditMode === 'details' ? "Edit Service Details" : (editingItem ? "Edit Service Package & Discounts" : "Add New Service Package")}
               </h3>
 
               <form onSubmit={handleSavePackage}>
+                {packageEditMode === 'full' && (
+                  <>
                 <div style={{ marginBottom: '18px', background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
                     Choose Display Type / Mode *
@@ -1197,10 +1265,9 @@ export default function ServicePage() {
                 </div>
 
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Package Title / Name *</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Package Title / Name</label>
                   <input
                     type="text"
-                    required
                     placeholder="e.g. Deep Cleaning Service, Standard Repair"
                     value={packageForm.name}
                     onChange={(e) => setPackageForm({ ...packageForm, name: e.target.value })}
@@ -1210,10 +1277,9 @@ export default function ServicePage() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Selling Price (₹) *</label>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Selling Price (₹)</label>
                     <input
                       type="number"
-                      required
                       placeholder="e.g. 499"
                       value={packageForm.price}
                       onChange={(e) => setPackageForm({ ...packageForm, price: e.target.value })}
@@ -1299,6 +1365,8 @@ export default function ServicePage() {
                     style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                   />
                 </div>
+                </>
+                )}
 
                 <div style={{ marginBottom: '14px' }}>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Service Details / Highlights (MS Word Editor)</label>
@@ -1313,6 +1381,8 @@ export default function ServicePage() {
                   </div>
                 </div>
 
+                {packageEditMode === 'full' && (
+                  <>
                 <div style={{ marginBottom: '14px' }}>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Package Image / Photo</label>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1329,6 +1399,8 @@ export default function ServicePage() {
                     </label>
                   </div>
                 </div>
+                </>
+                )}
 
                 <button
                   type="submit"
@@ -1349,41 +1421,18 @@ export default function ServicePage() {
               {/* Modal Close Button */}
               <button onClick={() => setViewDetailsItem(null)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: 'rgba(255,255,255,0.9)', width: '36px', height: '36px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer', zIndex: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>×</button>
 
-              {/* Package Banner Image */}
-              {viewDetailsItem.image && (
-                <div style={{ width: '100%', height: '220px', position: 'relative', overflow: 'hidden', borderRadius: '20px 20px 0 0' }}>
-                  <img src={viewDetailsItem.image} alt={viewDetailsItem.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  {viewDetailsItem.bestSeller && (
-                    <span style={{ position: 'absolute', bottom: '12px', left: '16px', background: '#3b82f6', color: '#ffffff', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800' }}>
-                      ★ BESTSELLER
-                    </span>
-                  )}
-                </div>
-              )}
+
 
               <div style={{ padding: '24px' }}>
-                {/* Title & Edit Action */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
-                  <div>
-                    <h2 style={{ margin: '0 0 6px 0', fontSize: '22px', fontWeight: '800', color: '#0f172a' }}>{viewDetailsItem.name}</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748b' }}>
-                      <span style={{ color: '#f59e0b', fontWeight: '800' }}>★ {viewDetailsItem.rating || '4.8'}</span>
-                      <span>({viewDetailsItem.reviews || '5K'} reviews)</span>
-                      {viewDetailsItem.duration && (
-                        <>
-                          <span>•</span>
-                          <span>{viewDetailsItem.duration}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                {/* Edit Action */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
 
                   {isAdmin && adminEditMode && (
                     <button
                       onClick={(e) => {
                         const targetSecId = viewDetailsSectionId || (servicesList[0] && servicesList[0].id);
                         setViewDetailsItem(null);
-                        handleOpenEditPackage(e, targetSecId, viewDetailsItem);
+                        handleOpenEditPackage(e, targetSecId, viewDetailsItem, 'details');
                       }}
                       style={{ background: '#3b82f6', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}
                     >
@@ -1392,18 +1441,7 @@ export default function ServicePage() {
                   )}
                 </div>
 
-                {/* Price & Discounts */}
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '20px', background: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a' }}>₹{viewDetailsItem.price}</span>
-                  {viewDetailsItem.originalPrice && viewDetailsItem.originalPrice > viewDetailsItem.price && (
-                    <>
-                      <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '15px' }}>₹{viewDetailsItem.originalPrice}</span>
-                      <span style={{ color: '#16a34a', fontWeight: '800', fontSize: '13px' }}>
-                        ({Math.round(((viewDetailsItem.originalPrice - viewDetailsItem.price) / viewDetailsItem.originalPrice) * 100)}% OFF)
-                      </span>
-                    </>
-                  )}
-                </div>
+
 
                 {/* Highlights & Inclusions */}
                 <div style={{ marginBottom: '24px' }}>

@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 const OfferSchema = new mongoose.Schema({
     title: { 
         type: String, 
-        required: [true, 'Offer title is required'], 
-        trim: true
+        trim: true,
+        default: ''
     },
     subtitle: { 
         type: String, 
@@ -19,16 +19,15 @@ const OfferSchema = new mongoose.Schema({
     buttonText: { 
         type: String, 
         trim: true,
-        default: 'Explore →' 
+        default: '' 
     },
     price: { 
-        type: Number, 
-        default: 0 
+        type: Number
     },
     route: { 
         type: String, 
         trim: true,
-        default: '/services' 
+        default: '' 
     },
     image: { 
         type: String, 
@@ -46,7 +45,7 @@ const OfferSchema = new mongoose.Schema({
         type: Number, 
         default: 0 
     }
-}, { timestamps: true });
+}, { timestamps: true, collection: '03_exclusive_offers' });
 
 delete mongoose.models.Offer;
 export default mongoose.models.Offer || mongoose.model('Offer', OfferSchema);

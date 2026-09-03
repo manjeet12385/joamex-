@@ -24,6 +24,27 @@ const PartnerSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please select a service category'],
     },
+    vendorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Vendor',
+        default: null
+    },
+    isOnline: {
+        type: Boolean,
+        default: false
+    },
+    currentLocation: {
+        type: { type: String, enum: ['Point'], default: 'Point' },
+        coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
+    },
+    walletBalance: {
+        type: Number,
+        default: 0
+    },
+    lifetimeEarnings: {
+        type: Number,
+        default: 0
+    },
 
     idCardFront: String,
     idCardBack: String,
@@ -55,5 +76,7 @@ const PartnerSchema = new mongoose.Schema({
 
 PartnerSchema.index({ status: 1, createdAt: -1 });
 PartnerSchema.index({ serviceCategory: 1 });
+PartnerSchema.index({ currentLocation: '2dsphere' }); // Geo-spatial index
+PartnerSchema.index({ vendorId: 1 });
 
 export default mongoose.models.Partner || mongoose.model('Partner', PartnerSchema);

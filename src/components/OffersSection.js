@@ -6,75 +6,9 @@ import { toast } from 'react-toastify';
 import { ShoppingCart, ArrowLeft, ArrowRight, Link as LinkIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-const initialOffers = [
-  {
-    id: 'offer-1',
-    name: 'Salon for Women',
-    title: 'Salon for Women',
-    subtitle: 'Save up to 40% OFF',
-    buttonText: 'Explore →',
-    bgColor: '#FCE4EC',
-    textColor: '#C2185B',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
-    price: 599,
-    badge: 'TRENDING',
-    route: '/services/bridal-makeup'
-  },
-  {
-    id: 'offer-2',
-    name: 'Home Cleaning',
-    title: 'Home Cleaning',
-    subtitle: 'Up to 40% OFF on Deep Cleaning',
-    buttonText: 'Explore →',
-    bgColor: '#F3E5F5',
-    textColor: '#7B1FA2',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop',
-    price: 799,
-    badge: 'POPULAR',
-    route: '/services/full-home-cleaning'
-  },
-  {
-    id: 'offer-3',
-    name: 'Plumbing Service',
-    title: 'Plumbing',
-    subtitle: 'Expert Plumbing Services',
-    buttonText: 'Explore →',
-    bgColor: '#E0F2F1',
-    textColor: '#00796B',
-    image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&h=300&fit=crop',
-    price: 149,
-    badge: 'NEW',
-    route: '/plumber'
-  },
-  {
-    id: 'offer-4',
-    name: 'AC Service & Repair',
-    title: 'Up to 30% OFF',
-    subtitle: 'AC Service & Repair',
-    buttonText: 'Explore →',
-    bgColor: '#E8F5E9',
-    textColor: '#388E3C',
-    image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=300&fit=crop',
-    price: 499,
-    badge: 'HOT DEAL',
-    route: '/ac-repair'
-  },
-  {
-    id: 'offer-5',
-    name: 'Electrician Service',
-    title: 'Electrician',
-    subtitle: 'Top Electrical Experts',
-    buttonText: 'Explore →',
-    bgColor: '#FFF3E0',
-    textColor: '#F57C00',
-    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&h=300&fit=crop',
-    price: 99,
-    badge: 'BEST VALUE',
-    route: '/electrician'
-  }
-];
 
-export default function OffersSection() {
+
+export default function OffersSection({ forceLive = false }) {
     const { addToCart } = useCart();
     const router = useRouter();
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -111,7 +45,8 @@ export default function OffersSection() {
     const [showTitleModal, setShowTitleModal] = useState(false);
     const [titleFormText, setTitleFormText] = useState('Exclusive Offers');
 
-    const [allOffers, setAllOffers] = useState(initialOffers);
+    const [allOffers, setAllOffers] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [showOfferModal, setShowOfferModal] = useState(false);
     const [editingOffer, setEditingOffer] = useState(null);
     const [offerForm, setOfferForm] = useState({
@@ -119,8 +54,8 @@ export default function OffersSection() {
       subtitle: '',
       badge: '',
       buttonText: 'Explore →',
-      price: '499',
-      route: '/services',
+      price: '',
+      route: '',
       image: '',
       bgColor: '#FCE4EC',
       textColor: '#C2185B'
@@ -139,32 +74,32 @@ export default function OffersSection() {
 
         const loadOffersData = async () => {
           try {
-            const res = await fetch('/api/offers');
+            const isAdm = !!localStorage.getItem('adminUser');
+            const isEd = localStorage.getItem('admin_edit_mode') === 'true';
+            const mode = (isAdm && isEd && !forceLive) ? '?mode=draft' : '?mode=live';
+            
+            const res = await fetch('/api/admin/exclusive-offers' + mode);
             if (res.ok) {
               const data = await res.json();
-              if (Array.isArray(data) && data.length > 0) {
-                const updatedParsed = data.map(o => ({
+              if (data.success && Array.isArray(data.offers)) {
+                const updatedParsed = data.offers.map(o => ({
                   ...o,
                   buttonText: (!o.buttonText || o.buttonText === 'Book Now →') ? 'Explore →' : o.buttonText
                 }));
                 setAllOffers(updatedParsed);
+                if (data.sectionTitle) setTitleFormText(data.sectionTitle);
               }
             } else {
-              setAllOffers(initialOffers);
+              setAllOffers([]);
             }
           } catch (error) {
             console.error('Error fetching offers:', error);
-            const storedOffers = localStorage.getItem('admin_exclusive_offers');
-            if (storedOffers) {
-              try {
-                const parsed = JSON.parse(storedOffers);
-                if (Array.isArray(parsed) && parsed.length > 0) setAllOffers(parsed);
-              } catch (e) {}
-            }
+            setAllOffers([]);
           }
           
           const storedTitle = localStorage.getItem('admin_offers_title');
           if (storedTitle) setSectionTitle(storedTitle);
+          setIsLoading(false);
         };
 
         loadOffersData();
@@ -222,15 +157,19 @@ export default function OffersSection() {
     };
 
     const handleSmartCardNavigate = (e, route) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      if (!route) {
-        router.push('/services');
+      if (adminEditMode) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         return;
       }
-      let cleanRoute = route.trim();
+      
+      let cleanRoute = route?.trim() || '';
+      
+      if (!cleanRoute || cleanRoute === '#') {
+        return;
+      }
       if (cleanRoute === '/ac' || cleanRoute === 'ac' || cleanRoute === '/services/ac') {
         cleanRoute = '/ac-repair';
       }
@@ -277,12 +216,24 @@ export default function OffersSection() {
       }
     };
 
-    const handleSaveTitle = (e) => {
+    const handleSaveTitle = async (e) => {
       e.preventDefault();
       setSectionTitle(titleFormText.trim());
-      localStorage.setItem('admin_offers_title', titleFormText.trim());
+      try {
+        const res = await fetch('/api/admin/exclusive-offers', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offers: allOffers, sectionTitle: titleFormText.trim() })
+        });
+        if (res.ok) {
+          toast.success("Offers section title updated (saved as draft)!");
+        } else {
+          toast.error("Failed to update title");
+        }
+      } catch (err) {
+        toast.error("Network error while saving title");
+      }
       setShowTitleModal(false);
-      toast.success("Offers section title updated!");
     };
 
     const handleOpenAddOffer = () => {
@@ -290,11 +241,11 @@ export default function OffersSection() {
       setOfferForm({
         title: '',
         subtitle: '',
-        badge: 'NEW',
-        buttonText: 'Explore →',
-        price: '499',
-        route: '/services',
-        image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+        badge: '',
+        buttonText: '',
+        price: '',
+        route: '',
+        image: '',
         bgColor: '#FCE4EC',
         textColor: '#C2185B'
       });
@@ -311,9 +262,9 @@ export default function OffersSection() {
         title: offer.title || '',
         subtitle: offer.subtitle || '',
         badge: offer.badge || '',
-        buttonText: offer.buttonText || 'Explore →',
-        price: offer.price || 499,
-        route: offer.route || '/services',
+        buttonText: offer.buttonText || '',
+        price: offer.price || '',
+        route: offer.route || '',
         image: offer.image || '',
         bgColor: offer.bgColor || '#FCE4EC',
         textColor: offer.textColor || '#C2185B'
@@ -328,11 +279,15 @@ export default function OffersSection() {
       }
       if (window.confirm("Delete this offer card?")) {
         try {
-          const res = await fetch(`/api/offers/${offerId}`, { method: 'DELETE' });
+          const updated = allOffers.filter(o => o._id !== offerId && o.id !== offerId);
+          const res = await fetch('/api/admin/exclusive-offers', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ offers: updated, sectionTitle: titleFormText })
+          });
           if (res.ok) {
-            const updated = allOffers.filter(o => o._id !== offerId && o.id !== offerId);
             setAllOffers(updated);
-            toast.success("Offer card deleted!");
+            toast.success("Offer card deleted (saved as draft)!");
           } else {
             toast.error("Failed to delete offer");
           }
@@ -345,52 +300,42 @@ export default function OffersSection() {
 
     const handleSaveOffer = async (e) => {
       e.preventDefault();
-      if (!offerForm.title.trim()) return;
 
       const payload = {
+        id: (editingOffer && (editingOffer._id || editingOffer.id)) ? (editingOffer._id || editingOffer.id) : Date.now().toString(),
         title: offerForm.title.trim(),
         subtitle: offerForm.subtitle.trim(),
         badge: offerForm.badge.trim(),
-        buttonText: offerForm.buttonText.trim() || 'Book Now →',
-        price: Number(offerForm.price) || 499,
-        route: offerForm.route.trim() || '/services',
-        image: offerForm.image.trim() || 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+        buttonText: offerForm.buttonText.trim(),
+        price: offerForm.price !== '' ? Number(offerForm.price) : undefined,
+        route: offerForm.route.trim(),
+        image: offerForm.image.trim(),
         bgColor: offerForm.bgColor,
         textColor: offerForm.textColor
       };
 
       try {
-        if (editingOffer && editingOffer._id) {
+        let updated = [];
+        if (editingOffer && (editingOffer._id || editingOffer.id)) {
           // Update existing offer
-          const res = await fetch(`/api/offers/${editingOffer._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (res.ok) {
-            const updatedOffer = await res.json();
-            const updated = allOffers.map(o => o._id === editingOffer._id ? updatedOffer : o);
-            setAllOffers(updated);
-            setShowOfferModal(false);
-            toast.success("Offer updated live!");
-          } else {
-            toast.error("Failed to update offer");
-          }
+          updated = allOffers.map(o => (o._id === editingOffer._id || o.id === editingOffer.id) ? { ...o, ...payload } : o);
         } else {
           // Create new offer
-          const res = await fetch('/api/offers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (res.ok) {
-            const newOffer = await res.json();
-            setAllOffers([...allOffers, newOffer]);
-            setShowOfferModal(false);
-            toast.success("New offer published live!");
-          } else {
-            toast.error("Failed to create offer");
-          }
+          updated = [...allOffers, payload];
+        }
+
+        const res = await fetch('/api/admin/exclusive-offers', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offers: updated, sectionTitle: titleFormText })
+        });
+
+        if (res.ok) {
+          setAllOffers(updated);
+          setShowOfferModal(false);
+          toast.success("Offer saved as draft!");
+        } else {
+          toast.error("Failed to save offer");
         }
       } catch (error) {
         console.error(error);
@@ -416,12 +361,22 @@ export default function OffersSection() {
         toast.success(`${offer.title || offer.name} added to cart!`);
     };
 
+    if (!isLoading && allOffers.length === 0 && !adminEditMode) {
+        return null;
+    }
+
     return (
         <section className="offers-section" style={{ position: 'relative' }}>
             <div className="offers-container">
                 <div className="offers-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h2 className="offers-title" style={{ margin: 0 }}>{sectionTitle}</h2>
+                        <h2 className="offers-title" style={{ margin: 0 }}>
+                          {isLoading ? (
+                            <span style={{display: 'inline-block', width: '200px', height: '28px', background: '#e2e8f0', borderRadius: '6px', animation: 'pulse 1.5s infinite'}}></span>
+                          ) : (
+                            sectionTitle
+                          )}
+                        </h2>
                         {isAdmin && adminEditMode && (
                           <button
                             onClick={() => {
@@ -500,11 +455,16 @@ export default function OffersSection() {
                     {/* Carousel Track */}
                     <div className="carousel-track" ref={carouselRef} onScroll={checkScroll}>
                         <div className="carousel-inner">
-                            {allOffers.map((offer, index) => (
-                                <div
+                            {isLoading ? (
+                                Array.from({ length: 4 }).map((_, idx) => (
+                                    <div key={`skeleton-${idx}`} className="offer-card" style={{ minWidth: '300px', height: '160px', background: '#e2e8f0', borderRadius: '24px', animation: 'pulse 1.5s infinite' }}></div>
+                                ))
+                            ) : (
+                                allOffers.map((offer, index) => (
+                                    <div
                                     key={offer._id || offer.id || index}
                                     className="offer-card"
-                                    onClick={(e) => handleSmartCardNavigate(e, offer.route || '/services')}
+                                    onClick={(e) => handleSmartCardNavigate(e, offer.route)}
                                     style={{ backgroundColor: offer.bgColor, position: 'relative', cursor: 'pointer' }}
                                 >
                                     {isAdmin && adminEditMode && (
@@ -529,16 +489,18 @@ export default function OffersSection() {
                                     {offer.badge && (
                                         <div className="offer-badge">{offer.badge}</div>
                                     )}
-                                    <div className="offer-image">
-                                        <img src={offer.image} alt={offer.title} />
-                                    </div>
+                                    {offer.image && (
+                                        <div className="offer-image">
+                                            <img src={offer.image} alt={offer.title} />
+                                        </div>
+                                    )}
                                     <div className="offer-content">
                                         <h3 style={{ color: offer.textColor }}>{offer.title}</h3>
                                         <p>{offer.subtitle}</p>
                                         <div className="offer-actions">
                                             <button
                                                 className="offer-button"
-                                                onClick={(e) => handleSmartCardNavigate(e, offer.route || '/services')}
+                                                onClick={(e) => handleSmartCardNavigate(e, offer.route)}
                                                 style={{
                                                     backgroundColor: offer.textColor,
                                                     color: '#fff',
@@ -550,7 +512,7 @@ export default function OffersSection() {
                                         </div>
                                     </div>
                                 </div>
-                            ))}
+                            )))}
                         </div>
                     </div>
                 </div>
@@ -558,7 +520,7 @@ export default function OffersSection() {
 
             {/* EDIT TITLE MODAL */}
             {showTitleModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowTitleModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '400px', width: '90%', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowTitleModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Edit Section Title</h3>
@@ -580,7 +542,7 @@ export default function OffersSection() {
 
             {/* ADD / EDIT OFFER CARD MODAL */}
             {showOfferModal && (
-              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setShowOfferModal(false)}>
+              <div className="hero-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
                 <div className="hero-modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '480px', width: '90%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', position: 'relative', zIndex: 1000000 }}>
                   <button type="button" onClick={() => setShowOfferModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: '#f1f5f9', width: '32px', height: '32px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer' }}>×</button>
                   <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
@@ -589,10 +551,9 @@ export default function OffersSection() {
 
                   <form onSubmit={handleSaveOffer}>
                     <div style={{ marginBottom: '14px' }}>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Offer Card Title *</label>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>Offer Card Title</label>
                       <input
                         type="text"
-                        required
                         placeholder="e.g. Salon for Women, Home Cleaning"
                         value={offerForm.title}
                         onChange={(e) => setOfferForm({ ...offerForm, title: e.target.value })}
