@@ -516,6 +516,16 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
     setSelectedPreferenceItem(null);
   };
 
+  useEffect(() => {
+    const handleOpenCategory = (e) => {
+      if (e.detail && e.detail.categoryKey) {
+        handleCategoryClick(e.detail.categoryKey);
+      }
+    };
+    window.addEventListener('open-category-popup', handleOpenCategory);
+    return () => window.removeEventListener('open-category-popup', handleOpenCategory);
+  }, []);
+
   const handleLinkSubItemToOffer = async (e, sub) => {
     if (e) {
       e.preventDefault();

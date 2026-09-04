@@ -284,7 +284,8 @@ export default function Header() {
                   name: c.name,
                   categoryName: 'Category',
                   icon: c.image || c.icon || '📁',
-                  route: `/services/${c.slug || c._id}`
+                  route: `/services/${c.slug || c._id}`,
+                  categoryId: c.slug || c._id
                 });
               }
             });
@@ -534,7 +535,19 @@ export default function Header() {
                   key={index}
                   className="search-suggestion-item"
                   onClick={() => {
-                    if (sub.route) {
+                    if (sub.categoryId) {
+                      if (pathname !== '/') {
+                        router.push('/#what-are-you-looking-for');
+                        // Wait a bit for navigation before dispatching
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent('open-category-popup', { detail: { categoryKey: sub.categoryId } }));
+                        }, 500);
+                      } else {
+                        const el = document.getElementById('what-are-you-looking-for');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        window.dispatchEvent(new CustomEvent('open-category-popup', { detail: { categoryKey: sub.categoryId } }));
+                      }
+                    } else if (sub.route) {
                       router.push(sub.route);
                     }
                     setSearchTerm('');
