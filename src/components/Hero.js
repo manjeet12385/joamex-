@@ -398,6 +398,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
             if (catData.sectionTitle) setCatSectionTitle(catData.sectionTitle);
             if (catData.categories.length > 0) {
               catList = catData.categories.map(c => ({
+                ...c,
                 _id: c._id || c.id,
                 key: c.key || c.slug || c._id || c.id,
                 label: c.label || c.name,
@@ -715,10 +716,12 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
       const updated = serviceCategories.filter(c => c.key !== catKey && (c._id || c.id) !== catId);
       try {
         const categoriesPayload = updated.map(c => ({
+          ...c,
           id: c._id || c.id,
-          name: c.label,
-          slug: c.key,
-          image: c.image
+          name: c.label || c.name,
+          slug: c.key || c.slug,
+          image: c.image,
+          subcategories: c.subcategories || []
         }));
         
         const res = await fetch('/api/admin/categories', {
@@ -802,10 +805,12 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
 
     try {
       const categoriesPayload = updated.map(c => ({
+        ...c,
         id: c._id || c.id,
-        name: c.label,
-        slug: c.key,
-        image: c.image
+        name: c.label || c.name,
+        slug: c.key || c.slug,
+        image: c.image,
+        subcategories: c.subcategories || []
       }));
       
       const res = await fetch('/api/admin/categories', {

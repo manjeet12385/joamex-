@@ -555,7 +555,7 @@ export default function Header() {
                   }}
                 >
                   <span className="suggestion-icon">
-                    {typeof sub.icon === 'string' && (sub.icon.startsWith('/') || sub.icon.startsWith('http')) ? (
+                    {typeof sub.icon === 'string' && (sub.icon.startsWith('/') || sub.icon.startsWith('http') || sub.icon.startsWith('data:')) ? (
                       <img src={sub.icon} alt={sub.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
                     ) : (
                       sub.icon
