@@ -70,13 +70,13 @@ export async function POST(req) {
                 } else if (key === 'admin_custom_category_items') {
                     const customCatItems = data[key];
                     if (customCatItems && typeof customCatItems === 'object') {
-                        // FIX: The 02_what_are_you_looking_for collection stores all categories
-                        // inside a single document's 'categories' array — NOT as separate documents
-                        // with a top-level slug. So we find the draft doc and update inside the array.
+                        // Sync subcategories to BOTH draft and live docs in 02_what_are_you_looking_for
+                        // so that deletions are immediately reflected on page reload (not just after Publish)
+                        const docsToUpdate = [];
+                        const liveDoc = await Category.findOne({ status: 'live' });
                         let draftDoc = await Category.findOne({ status: 'draft' });
-                        if (!draftDoc) {
-                            // If no draft, copy from live and create draft
-                            const liveDoc = await Category.findOne({ status: 'live' });
+
+                        if (!draftDoc && liveDoc) {
                             draftDoc = new Category({
                                 status: 'draft',
                                 categories: liveDoc?.categories || [],
@@ -84,53 +84,69 @@ export async function POST(req) {
                             });
                         }
 
-                        const categoriesArr = Array.isArray(draftDoc.categories) ? [...draftDoc.categories] : [];
-                        let draftModified = false;
+                        if (liveDoc) docsToUpdate.push(liveDoc);
+                        if (draftDoc) docsToUpdate.push(draftDoc);
 
-                        for (const catKey of Object.keys(customCatItems)) {
-                            const items = customCatItems[catKey];
-                            if (!Array.isArray(items)) continue;
+                        for (const doc of docsToUpdate) {
+                            const categoriesArr = Array.isArray(doc.categories) ? [...doc.categories] : [];
+                            let docModified = false;
 
-                            // Build updated subcategories array from the sub-items
-                            const updatedSubcategories = items.map(item => {
-                                const itemName = item.name || item.label || '';
-                                const itemSlug = itemName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                                return {
-                                    name: itemName,
-                                    slug: itemSlug,
-                                    icon: item.icon || '',
-                                    badge: item.badge || '',
-                                    time: item.time || '',
-                                    route: item.route || '',
-                                    details: item.details || ''
-                                };
-                            });
+                            for (const catKey of Object.keys(customCatItems)) {
+                                const items = customCatItems[catKey];
+                                if (!Array.isArray(items)) continue;
 
-                            // Find the category inside the categories array by slug or name
-                            const catIndex = categoriesArr.findIndex(c =>
-                                (c.slug && c.slug.toLowerCase() === catKey.toLowerCase()) ||
-                                (c.key && c.key.toLowerCase() === catKey.toLowerCase()) ||
-                                (c.name && c.name.toLowerCase() === catKey.toLowerCase())
-                            );
+                                // Find the existing category to preserve rich data
+                                const catIndex = categoriesArr.findIndex(c =>
+                                    (c.slug && c.slug.toLowerCase() === catKey.toLowerCase()) ||
+                                    (c.key && c.key.toLowerCase() === catKey.toLowerCase()) ||
+                                    (c.name && c.name.toLowerCase() === catKey.toLowerCase())
+                                );
+                                const existingSubs = catIndex !== -1 && Array.isArray(categoriesArr[catIndex].subcategories) 
+                                    ? categoriesArr[catIndex].subcategories 
+                                    : [];
 
-                            if (catIndex !== -1) {
-                                // Update existing category in array
-                                categoriesArr[catIndex] = {
-                                    ...categoriesArr[catIndex],
-                                    subcategories: updatedSubcategories
-                                };
-                                draftModified = true;
-                                console.log(`Synced ${updatedSubcategories.length} subcategories into draft categories[${catIndex}] for: ${catKey}`);
-                            } else {
-                                console.warn(`Category "${catKey}" not found in draft categories array — skipping subcategory sync`);
+                                // Build updated subcategories array from the sub-items (deletions are reflected by absence)
+                                const updatedSubcategories = items.map(item => {
+                                    const itemName = item.name || item.label || '';
+                                    const baseSlug = itemName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                                    // Make the DB slug unique by appending the uid, matching the route format
+                                    const itemSlug = item.uid ? `${baseSlug}--${item.uid}` : baseSlug;
+                                    
+                                    const existingSub = existingSubs.find(ex => ex && (ex.slug === itemSlug || ex.name === itemName));
+                                    
+                                    return {
+                                        name: itemName,
+                                        slug: itemSlug,
+                                        icon: item.icon || '',
+                                        badge: item.badge || '',
+                                        time: item.time || '',
+                                        route: item.route || '',
+                                        uid: item.uid || '',
+                                        details: item.details || '',
+                                        headerInfo: existingSub ? existingSub.headerInfo : undefined,
+                                        servicesList: existingSub ? existingSub.servicesList : undefined
+                                    };
+                                });
+
+
+                                if (catIndex !== -1) {
+                                    categoriesArr[catIndex] = {
+                                        ...categoriesArr[catIndex],
+                                        subcategories: updatedSubcategories
+                                    };
+                                    docModified = true;
+                                    console.log(`[${doc.status}] Synced ${updatedSubcategories.length} subcategories for: ${catKey}`);
+                                } else {
+                                    console.warn(`Category "${catKey}" not found in ${doc.status} categories array — skipping`);
+                                }
                             }
-                        }
 
-                        if (draftModified) {
-                            draftDoc.categories = categoriesArr;
-                            draftDoc.markModified('categories');
-                            await draftDoc.save();
-                            console.log('Draft 02_what_are_you_looking_for updated with subcategories.');
+                            if (docModified) {
+                                doc.categories = categoriesArr;
+                                doc.markModified('categories');
+                                await doc.save();
+                                console.log(`${doc.status} 02_what_are_you_looking_for updated with subcategories.`);
+                            }
                         }
                     }
                 }

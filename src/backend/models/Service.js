@@ -57,6 +57,16 @@ const ServiceSchema = new mongoose.Schema({
     order: { 
         type: Number, 
         default: 0 
+    },
+    publishStatus: {
+        type: String,
+        enum: ['live', 'draft', 'draft_deleted'],
+        default: 'live'
+    },
+    liveServiceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Service',
+        default: null
     }
 }, { timestamps: true });
 

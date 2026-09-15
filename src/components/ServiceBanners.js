@@ -98,10 +98,10 @@ export default function ServiceBanners() {
       setBannerForm({
         title: '',
         description: '',
-        tags: 'Service 1, Service 2, Service 3',
-        buttonText: 'Book Now',
-        route: '/services',
-        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop',
+        tags: '',
+        buttonText: '',
+        route: '',
+        image: '',
         textColor: '#ffffff',
         buttonBgColor: '#2563eb',
         imageOnly: false
@@ -148,8 +148,8 @@ export default function ServiceBanners() {
       }
     };
 
-    const handleSmartCardNavigate = (e, route) => {
-      if (adminEditMode) {
+    const handleSmartCardNavigate = (e, route, forceNavigate = false) => {
+      if (adminEditMode && !forceNavigate) {
         e.preventDefault();
         return;
       }
@@ -323,7 +323,7 @@ export default function ServiceBanners() {
             )}
 
             {bannersList.map((banner) => (
-              <div key={banner.id} className={`banner ${banner.bannerClass || 'custom-feature-banner'}`} style={{ position: 'relative' }}>
+              <div key={banner.id} className={`banner ${banner.bannerClass || 'custom-feature-banner'} ${banner.imageOnly ? 'is-image-only' : ''}`} style={{ position: 'relative' }}>
                 {isAdmin && adminEditMode && (
                   <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px', zIndex: 50 }}>
                     <button
@@ -367,7 +367,10 @@ export default function ServiceBanners() {
                         </div>
                         <button
                           className="banner-button"
-                          onClick={(e) => handleSmartCardNavigate(e, banner.route || '/services')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSmartCardNavigate(e, banner.route || '/services', true);
+                          }}
                           style={{ background: btnBg, color: '#ffffff' }}
                         >
                           {banner.buttonText || 'Book Now'}

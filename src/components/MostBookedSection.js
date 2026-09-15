@@ -61,6 +61,7 @@ export default function MostBookedSection() {
             const res = await fetch('/api/admin/most-booked-services' + mode);
             const data = await res.json();
             if (data.success && Array.isArray(data.services)) {
+                // Respect the API even if empty, unless it's initial load with no _id on any item (backend handles defaults usually)
                 setServicesList(data.services);
                 if (data.sectionTitle) setSectionTitle(data.sectionTitle);
             }
@@ -185,10 +186,7 @@ export default function MostBookedSection() {
     };
 
     const handleSmartCardNavigate = (e, route) => {
-      if (adminEditMode) {
-        e.preventDefault();
-        return;
-      }
+
       
       const cleanRoute = route?.trim() || '';
       

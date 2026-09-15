@@ -55,6 +55,34 @@ export async function POST() {
             await SectionTitles.deleteOne({ status: 'draft' });
         }
         
+        // Publish Services (individual documents)
+        const { default: Service } = await import('@/backend/models/Service');
+        
+        // 1. Delete all draft_deleted services and their live counterparts
+        const draftDeletes = await Service.find({ publishStatus: 'draft_deleted' });
+        for (const d of draftDeletes) {
+            if (d.liveServiceId) await Service.findByIdAndDelete(d.liveServiceId);
+            await Service.findByIdAndDelete(d._id);
+        }
+
+        // 2. Publish all draft updates/creations
+        const serviceDrafts = await Service.find({ publishStatus: 'draft' });
+        for (const draft of serviceDrafts) {
+            if (draft.liveServiceId) {
+                // Update existing live service
+                const data = { ...draft.toObject() };
+                delete data._id; 
+                delete data.publishStatus; 
+                delete data.liveServiceId;
+                await Service.findByIdAndUpdate(draft.liveServiceId, data);
+                await Service.findByIdAndDelete(draft._id);
+            } else {
+                // New service
+                draft.publishStatus = 'live';
+                await draft.save();
+            }
+        }
+        
         return NextResponse.json({ success: true, message: 'Changes published successfully.' });
     } catch (error) {
         console.error('Publish All Error:', error);

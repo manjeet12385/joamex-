@@ -21,10 +21,24 @@ export async function DELETE(req, { params }) {
             return NextResponse.json({ success: false, message: 'Service ID is required' }, { status: 400 });
         }
 
-        const deletedService = await Service.findByIdAndDelete(id);
+        const existingService = await Service.findById(id);
 
-        if (!deletedService) {
+        if (!existingService) {
             return NextResponse.json({ success: false, message: 'Service not found' }, { status: 404 });
+        }
+
+        let deletedService;
+        if (existingService.publishStatus === 'live') {
+            const draftData = {
+                ...existingService.toObject(),
+                _id: undefined,
+                publishStatus: 'draft_deleted',
+                liveServiceId: existingService._id
+            };
+            delete draftData.id;
+            deletedService = await Service.create(draftData);
+        } else {
+            deletedService = await Service.findByIdAndDelete(id);
         }
 
         return NextResponse.json({

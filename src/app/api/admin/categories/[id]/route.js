@@ -71,13 +71,23 @@ export async function GET(req, { params }) {
 
         // Step 4 (KEY FIX): Check inside the categories[].subcategories[] array of 02_what_are_you_looking_for documents
         if (!category) {
-            const lookingForDoc = await Category.findOne({
-                status: 'live',
+            let lookingForDoc = await Category.findOne({
+                status: 'draft',
                 $or: [
                     { "categories.subcategories.slug": normalizedSlug },
                     { "categories.subcategories.name": { $regex: `^${normalizedSlug.replace(/-/g, ' ')}$`, $options: 'i' } }
                 ]
             });
+            
+            if (!lookingForDoc) {
+                lookingForDoc = await Category.findOne({
+                    status: 'live',
+                    $or: [
+                        { "categories.subcategories.slug": normalizedSlug },
+                        { "categories.subcategories.name": { $regex: `^${normalizedSlug.replace(/-/g, ' ')}$`, $options: 'i' } }
+                    ]
+                });
+            }
             if (lookingForDoc && Array.isArray(lookingForDoc.categories)) {
                 for (const cat of lookingForDoc.categories) {
                     if (Array.isArray(cat.subcategories)) {
@@ -109,13 +119,22 @@ export async function GET(req, { params }) {
         // Step 5: Check inside the categories[] array of 02_what_are_you_looking_for documents
         // e.g. { categories: [{ slug: 'painter', subcategories: [...] }] }
         if (!category) {
-            const lookingForDoc = await Category.findOne({
-                status: 'live',
+            let lookingForDoc = await Category.findOne({
+                status: 'draft',
                 $or: [
                     { "categories.slug": normalizedSlug },
                     { "categories.name": { $regex: `^${normalizedSlug.replace(/-/g, ' ')}$`, $options: 'i' } }
                 ]
             });
+            if (!lookingForDoc) {
+                lookingForDoc = await Category.findOne({
+                    status: 'live',
+                    $or: [
+                        { "categories.slug": normalizedSlug },
+                        { "categories.name": { $regex: `^${normalizedSlug.replace(/-/g, ' ')}$`, $options: 'i' } }
+                    ]
+                });
+            }
             if (lookingForDoc && Array.isArray(lookingForDoc.categories)) {
                 const catItem = lookingForDoc.categories.find(c =>
                     c && (
@@ -235,6 +254,10 @@ export async function PUT(req, { params }) {
             if (headerInfo !== undefined) currentSub.headerInfo = headerInfo;
             if (servicesList !== undefined) currentSub.servicesList = servicesList;
             if (name !== undefined) currentSub.name = name;
+            if (description !== undefined) currentSub.description = description;
+            if (icon !== undefined) currentSub.icon = icon;
+            if (image !== undefined) currentSub.image = image;
+            if (status !== undefined) currentSub.status = status;
             currentSub.slug = normalizedSlug;
 
             parentCategory.subcategories[subIndex] = currentSub;
@@ -348,6 +371,10 @@ export async function PUT(req, { params }) {
                     if (headerInfo !== undefined) subItem.headerInfo = headerInfo;
                     if (servicesList !== undefined) subItem.servicesList = servicesList;
                     if (name !== undefined) subItem.name = name;
+                    if (description !== undefined) subItem.description = description;
+                    if (icon !== undefined) subItem.icon = icon;
+                    if (image !== undefined) subItem.image = image;
+                    if (status !== undefined) subItem.status = status;
 
                     catItem.subcategories[foundSubIndex] = subItem;
                     lookingForDoc.categories[foundCatIndex] = catItem;
@@ -440,6 +467,43 @@ export async function PUT(req, { params }) {
                     if (headerInfo !== undefined) catItem.headerInfo = headerInfo;
                     if (servicesList !== undefined) catItem.servicesList = servicesList;
                     if (name !== undefined) catItem.name = name;
+                    if (description !== undefined) catItem.description = description;
+                    if (icon !== undefined) catItem.icon = icon;
+                    if (image !== undefined) catItem.image = image;
+                    if (status !== undefined) catItem.status = status;
+                    if (order !== undefined) catItem.order = Number(order);
+
+                    if (subcategories !== undefined) {
+                        const rawSubs = Array.isArray(subcategories)
+                            ? subcategories
+                            : (typeof subcategories === 'string' ? subcategories.split(',').map(s => s.trim()).filter(Boolean) : []);
+                        
+                        const existingList = Array.isArray(catItem.subcategories) ? catItem.subcategories : [];
+
+                        catItem.subcategories = rawSubs.map(s => {
+                            const sName = typeof s === 'string' ? s.trim() : (s.name || '');
+                            const sSlug = typeof s === 'string' ? sName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : (s.slug || sName.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+                            const existing = existingList.find(ex => ex && (
+                                (typeof s === 'object' && s.id && ex.id === s.id) ||
+                                (!(typeof s === 'object' && s.id) && (ex.slug === sSlug || (typeof ex === 'object' && ex.name === sName)))
+                            ));
+                            
+                            if (existing && typeof existing === 'object') {
+                                return {
+                                    ...(typeof s === 'object' ? s : { name: sName, slug: sSlug }),
+                                    ...existing, // Overwrite with existing rich data from DB
+                                    name: sName,
+                                    slug: sSlug,
+                                    icon: typeof s === 'object' && s.icon !== undefined ? s.icon : existing.icon,
+                                    image: typeof s === 'object' && s.image !== undefined ? s.image : existing.image,
+                                    // Make sure headerInfo and servicesList from existing are kept
+                                    headerInfo: existing.headerInfo,
+                                    servicesList: existing.servicesList
+                                };
+                            }
+                            return typeof s === 'object' ? s : { name: sName, slug: sSlug };
+                        });
+                    }
 
                     lookingForDoc.categories[catIndex] = catItem;
                     lookingForDoc.markModified('categories');
@@ -465,6 +529,15 @@ export async function PUT(req, { params }) {
 
         // Standard Main Category create or update (fallback)
         if (!category) {
+            // GUARD: If slug contains '--uid' it's a unique subcategory URL.
+            // Do NOT create a new Category document for it — that would create
+            // orphan "live" documents with empty categories in the DB.
+            if (normalizedSlug.includes('--uid')) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Subcategory data not yet saved — please save banner/services first via the Edit button.'
+                }, { status: 404 });
+            }
             category = new Category({
                 name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
                 slug: id.toLowerCase(),
@@ -516,9 +589,23 @@ export async function PUT(req, { params }) {
             category.subcategories = rawSubs.map(s => {
                 const sName = typeof s === 'string' ? s.trim() : (s.name || '');
                 const sSlug = sName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const existing = existingList.find(ex => ex && (ex.slug === sSlug || (typeof ex === 'object' && ex.name === sName)));
+                const existing = existingList.find(ex => ex && (
+                    (typeof s === 'object' && s.id && ex.id === s.id) ||
+                    (!(typeof s === 'object' && s.id) && (ex.slug === sSlug || (typeof ex === 'object' && ex.name === sName)))
+                ));
+                
                 if (existing && typeof existing === 'object') {
-                    return { ...existing, name: sName };
+                    return {
+                        ...(typeof s === 'object' ? s : { name: sName, slug: sSlug }),
+                        ...existing, // Overwrite with existing rich data from DB
+                        name: sName,
+                        slug: sSlug,
+                        icon: typeof s === 'object' && s.icon !== undefined ? s.icon : existing.icon,
+                        image: typeof s === 'object' && s.image !== undefined ? s.image : existing.image,
+                        // Make sure headerInfo and servicesList from existing are kept
+                        headerInfo: existing.headerInfo,
+                        servicesList: existing.servicesList
+                    };
                 }
                 return typeof s === 'object' ? s : { name: sName, slug: sSlug };
             });
@@ -616,6 +703,12 @@ export async function DELETE(req, { params }) {
 
         draftDoc.markModified('categories');
         await draftDoc.save();
+
+        // Cleanup Ghost/Orphan documents with this slug
+        await Category.deleteMany({
+            isSubcategory: true,
+            slug: normalizedSlug
+        });
 
         return NextResponse.json({
             success: true,

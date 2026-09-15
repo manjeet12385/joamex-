@@ -247,3 +247,40 @@
         width: 40% !important;
     }
 }
+
+/* Image Only Banner Mode */
+.banner.is-image-only {
+    padding: 0 !important;
+}
+
+.banner.is-image-only .banner-image {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 16px !important;
+    background: #f8fafc;
+}
+
+.banner.is-image-only .banner-image img {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 16px !important;
+}
+
+.banner.is-image-only .banner-content {
+    display: none !important;
+}
+
+@media (max-width: 968px) {
+    .banner.is-image-only .banner-image {
+        width: 100% !important;
+        border-radius: 16px !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .banner.is-image-only .banner-image {
+        width: 100% !important;
+        border-radius: 16px !important;
+    }
+}

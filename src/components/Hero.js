@@ -185,12 +185,17 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
           if (data.data.heroTitle) setHeroSectionTitle(data.data.heroTitle);
           setHeroBanners(data.data);
           
-          if (Array.isArray(data.data.sideCards) && data.data.sideCards.length > 0) {
-            let merged = [...data.data.sideCards];
-            while (merged.length < 2 && defaultJustdialSideCards[merged.length]) {
-              merged.push(defaultJustdialSideCards[merged.length]);
+          if (Array.isArray(data.data.sideCards)) {
+            // Check if it's the very first time (null or not defined originally)
+            // But since the API returns an empty array when deleted, we should respect it
+            // Only use defaults if sideCards is entirely missing (not even an array) or if we want to force it initially.
+            // Wait, actually let's just use what API gives us. If it's empty, it's empty!
+            if (data.data.sideCards.length === 0 && !data.data._id) {
+               // Initial load if no document exists yet
+               setJustdialSideCards(defaultJustdialSideCards);
+            } else {
+               setJustdialSideCards(data.data.sideCards.slice(0, 2));
             }
-            setJustdialSideCards(merged.slice(0, 2));
           } else {
             setJustdialSideCards(defaultJustdialSideCards);
           }
@@ -430,8 +435,9 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
             const mergedItems = { ...dbItems };
             catList.forEach(cat => {
               const catKey = cat.key;
-              if (Array.isArray(cat.subcategories) && cat.subcategories.length > 0 && !mergedItems[catKey]) {
-                // Use subcategories from 02_what_are_you_looking_for as fallback if site-content doesn't have them
+              // Only use 02_what_are_you_looking_for subcategories if the catKey is
+              // COMPLETELY ABSENT from site-content (even an empty [] means admin explicitly cleared it)
+              if (Array.isArray(cat.subcategories) && cat.subcategories.length > 0 && !(catKey in mergedItems)) {
                 mergedItems[catKey] = cat.subcategories;
               }
             });
@@ -539,9 +545,12 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
 
     try {
       const itemData = JSON.parse(linkingDataStr);
+      const _nameSlugLink = sub.name ? sub.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
       let rawRoute = (sub.route && sub.route.trim() !== '' && sub.route !== '#')
         ? sub.route
-        : `/services/${sub.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+        : sub.uid
+          ? `/services/${_nameSlugLink}--${sub.uid}`
+          : `/services/${_nameSlugLink}`;
 
       if (rawRoute === '/ac' || rawRoute === 'ac' || rawRoute === '/services/ac' || sub.name?.toLowerCase() === 'ac') {
         rawRoute = '/ac-repair';
@@ -867,7 +876,12 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
       // Fetch current full site content first, then merge updated items
       const res = await fetch('/api/site-content');
       const existing = await res.json();
-      const mergedData = { ...(existing?.data || {}), admin_custom_category_items: itemsData };
+      
+      // SAFELY MERGE: Preserve all existing DB categories and only update the ones present in itemsData
+      const dbCategories = existing?.data?.admin_custom_category_items || {};
+      const safelyMergedItems = { ...dbCategories, ...itemsData };
+      
+      const mergedData = { ...(existing?.data || {}), admin_custom_category_items: safelyMergedItems };
       await fetch('/api/site-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -888,8 +902,8 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
       const updatedAll = { ...customCategoryData, [selectedCategory]: updatedList };
       setCustomCategoryData(updatedAll);
       localStorage.setItem('admin_custom_category_items', JSON.stringify(updatedAll));
-      // Save to DB
-      await saveSubItemsToDB(updatedAll);
+      // Save ONLY the modified category to DB to prevent overwriting other categories with stale local state
+      await saveSubItemsToDB({ [selectedCategory]: updatedList });
       window.dispatchEvent(new Event('admin-categories-updated'));
     }
   };
@@ -926,12 +940,20 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
           return item;
         });
       } else {
+        // Generate a unique UID so same-named subcategories never share a URL or DB entry
+        const uid = 'uid' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        const nameSlug = subItemForm.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        // If admin provided a custom route, use it as-is; otherwise auto-generate a unique route
+        const autoRoute = subItemForm.route.trim() && subItemForm.route.trim() !== ''
+          ? subItemForm.route.trim()
+          : `/services/${nameSlug}--${uid}`;
         const newItem = {
           name: subItemForm.name.trim(),
           icon: subItemForm.icon.trim() || '/categories/cleaning.png',
           badge: subItemForm.badge.trim(),
           time: subItemForm.time.trim(),
-          route: subItemForm.route.trim(),
+          route: autoRoute,
+          uid: uid,
           details: subItemForm.details
         };
         updatedList = [...itemsList, newItem];
@@ -941,7 +963,8 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
       setCustomCategoryData(updatedAll);
       localStorage.setItem('admin_custom_category_items', JSON.stringify(updatedAll));
       
-      await saveSubItemsToDB(updatedAll);
+      // Save ONLY the modified category to DB to prevent overwriting other categories with stale local state
+      await saveSubItemsToDB({ [selectedCategory]: updatedList });
       window.dispatchEvent(new Event('admin-categories-updated'));
       setShowSubItemModal(false);
       setSubItemForm({ name: "", icon: "", badge: "", time: "", route: "", details: "" });
@@ -1486,9 +1509,13 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                           <h4 className="hero-section-title">{section.title}</h4>
                           <div className="hero-subcategory-grid">
                             {section.items.map((sub, index) => {
+                              const nameSlug = sub.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                              // Use stored route (with uid) if available; reconstruct uid-route if uid exists; else fallback to name-slug for legacy items
                               const routeSlug = (sub.route && sub.route.trim() !== '' && sub.route !== '#')
                                 ? sub.route
-                                : `/services/${sub.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+                                : sub.uid
+                                  ? `/services/${nameSlug}--${sub.uid}`
+                                  : `/services/${nameSlug}`;
                               return (
                                 <div
                                   key={index}
@@ -1623,9 +1650,13 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                   ) : currentCat.subcategories ? (
                     <div className="hero-subcategory-grid">
                       {currentCat.subcategories.map((sub, index) => {
+                        const nameSlug = sub.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        // Use stored route (with uid) if available; reconstruct uid-route if uid exists; else fallback to name-slug for legacy items
                         const routeSlug = (sub.route && sub.route.trim() !== '' && sub.route !== '#')
                           ? sub.route
-                          : `/services/${sub.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+                          : sub.uid
+                            ? `/services/${nameSlug}--${sub.uid}`
+                            : `/services/${nameSlug}`;
                         return (
                           <div
                             key={index}

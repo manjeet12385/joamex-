@@ -9,7 +9,7 @@ export async function GET(req) {
         const url = new URL(req.url);
         const category = url.searchParams.get('category');
         
-        let query = {};
+        let query = { publishStatus: 'live' };
         if (category) {
             query.category = category;
         }

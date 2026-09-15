@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from '@/components/Providers';
 import StickyWhatsApp from '@/components/StickyWhatsApp';
+import WelcomePopup from '@/components/WelcomePopup';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -143,6 +144,7 @@ export default function RootLayout({ children }) {
         <Providers>
           {children}
         </Providers>
+        <WelcomePopup />
         <StickyWhatsApp />
       </body>
     </html>

@@ -186,10 +186,7 @@ export default function SolarWaterSection() {
     };
 
     const handleSmartCardNavigate = (e, route) => {
-      if (adminEditMode) {
-        e.preventDefault();
-        return;
-      }
+
       
       const cleanRoute = route?.trim() || '';
       

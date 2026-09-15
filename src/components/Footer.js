@@ -31,8 +31,7 @@ export default function Footer() {
           {/* BRAND */}
           <div className="footer-brand">
             <div className="brand-logo">
-              <img src="/images/logo.png" alt="Joamex Logo" style={{ height: '36px', width: 'auto', objectFit: 'contain' }} />
-              <h3>Joamex</h3>
+              <img src="/images/logo.png" alt="Joamex Logo" style={{ height: '55px', width: 'auto', objectFit: 'contain' }} />
             </div>
             <p>
               Your one-stop destination for all home service needs. From cleaning to electrical

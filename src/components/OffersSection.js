@@ -156,8 +156,8 @@ export default function OffersSection({ forceLive = false }) {
         );
     };
 
-    const handleSmartCardNavigate = (e, route) => {
-      if (adminEditMode) {
+    const handleSmartCardNavigate = (e, route, forceNavigate = false) => {
+      if (adminEditMode && !forceNavigate) {
         if (e) {
           e.preventDefault();
           e.stopPropagation();
@@ -500,7 +500,10 @@ export default function OffersSection({ forceLive = false }) {
                                         <div className="offer-actions">
                                             <button
                                                 className="offer-button"
-                                                onClick={(e) => handleSmartCardNavigate(e, offer.route)}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleSmartCardNavigate(e, offer.route, true);
+                                                }}
                                                 style={{
                                                     backgroundColor: offer.textColor,
                                                     color: '#fff',

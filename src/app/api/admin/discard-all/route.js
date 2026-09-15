@@ -24,6 +24,9 @@ export async function POST() {
             await model.deleteOne({ status: 'draft' });
         }
         
+        const { default: Service } = await import('@/backend/models/Service');
+        await Service.deleteMany({ publishStatus: { $in: ['draft', 'draft_deleted'] } });
+        
         return NextResponse.json({ success: true, message: 'All draft changes discarded.' });
     } catch (error) {
         console.error('Discard All Error:', error);

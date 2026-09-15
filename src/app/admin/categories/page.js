@@ -70,6 +70,7 @@ export default function AdminCategoriesManagement() {
             const params = new URLSearchParams();
             if (searchTerm) params.append('search', searchTerm);
             if (statusFilter !== 'All') params.append('status', statusFilter);
+            params.append('mode', 'draft');
 
             const res = await fetch(`/api/admin/categories?${params.toString()}`);
             const data = await res.json();
@@ -129,19 +130,58 @@ export default function AdminCategoriesManagement() {
         setIsEditModalOpen(true);
     };
 
-    // Add subcategory tag inside modal
     const handleAddSubcatTag = () => {
         const trimmed = subcatTagInput.trim();
         if (!trimmed) return;
-        if (formData.subcategories.includes(trimmed)) {
+        
+        // Prevent duplicate names
+        if (formData.subcategories.some(tag => (typeof tag === 'string' ? tag : tag.name) === trimmed)) {
             toast.warning('Subcategory already added!');
             return;
         }
+
+        const newTag = {
+            id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            name: trimmed,
+            slug: trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        };
+
         setFormData(prev => ({
             ...prev,
-            subcategories: [...prev.subcategories, trimmed]
+            subcategories: [...prev.subcategories, newTag]
         }));
         setSubcatTagInput('');
+    };
+
+    // Edit subcategory tag
+    const handleEditSubcatTag = (index) => {
+        const currentTag = formData.subcategories[index];
+        const currentName = typeof currentTag === 'string' ? currentTag : (currentTag.name || '');
+        const newName = prompt('Edit subcategory name:', currentName);
+        if (newName && newName.trim() !== '' && newName.trim() !== currentName) {
+            const trimmed = newName.trim();
+            
+            // Prevent duplicate names
+            if (formData.subcategories.some((tag, idx) => idx !== index && (typeof tag === 'string' ? tag : tag.name) === trimmed)) {
+                toast.warning('Another subcategory with this name already exists!');
+                return;
+            }
+
+            setFormData(prev => {
+                const newSubs = [...prev.subcategories];
+                const tagObj = typeof newSubs[index] === 'string' ? { name: newSubs[index] } : { ...newSubs[index] };
+                
+                // If it didn't have an ID (old legacy tag), generate one so it retains its identity going forward
+                if (!tagObj.id) {
+                    tagObj.id = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+                }
+                
+                tagObj.name = trimmed;
+                tagObj.slug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                newSubs[index] = tagObj;
+                return { ...prev, subcategories: newSubs };
+            });
+        }
     };
 
     // Remove subcategory tag
@@ -276,6 +316,7 @@ export default function AdminCategoriesManagement() {
             const data = await res.json();
             if (data.success) {
                 toast.success(data.message || 'Category deleted successfully');
+                toast.warning('Warning: Please also remove this category from any Banners or Most Booked sections to prevent broken links on the website.', { autoClose: 8000 });
                 setIsDeleteModalOpen(false);
                 setCategoryToDelete(null);
                 if (typeof window !== 'undefined') window.dispatchEvent(new Event('admin-categories-updated'));
@@ -582,7 +623,7 @@ export default function AdminCategoriesManagement() {
                                             {cat.subcategories && cat.subcategories.length > 0 ? (
                                                 cat.subcategories.slice(0, 4).map((sub, idx) => (
                                                     <span key={idx} style={tagStyle}>
-                                                        {sub}
+                                                        {typeof sub === 'string' ? sub : (sub.name || 'Unknown')}
                                                     </span>
                                                 ))
                                             ) : (
@@ -781,14 +822,23 @@ export default function AdminCategoriesManagement() {
                                                     fontSize: '0.8rem',
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    gap: '6px'
+                                                    gap: '8px'
                                                 }}>
-                                                    {tag}
-                                                    <X
-                                                        size={14}
-                                                        style={{ cursor: 'pointer', color: '#f87171' }}
-                                                        onClick={() => handleRemoveSubcatTag(idx)}
-                                                    />
+                                                    {typeof tag === 'string' ? tag : (tag.name || 'Unknown')}
+                                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                        <Edit3
+                                                            size={13}
+                                                            style={{ cursor: 'pointer', color: '#60a5fa' }}
+                                                            onClick={() => handleEditSubcatTag(idx)}
+                                                            title="Edit Name"
+                                                        />
+                                                        <X
+                                                            size={14}
+                                                            style={{ cursor: 'pointer', color: '#f87171' }}
+                                                            onClick={() => handleRemoveSubcatTag(idx)}
+                                                            title="Remove"
+                                                        />
+                                                    </div>
                                                 </span>
                                             ))}
                                         </div>

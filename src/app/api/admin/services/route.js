@@ -7,14 +7,21 @@ import { verifyJWT } from '@/backend/services/authService';
 export async function GET(req) {
     try {
         await connectToDatabase();
-        const services = await Service.find({}).sort({ createdAt: -1 });
+        const allServices = await Service.find({ publishStatus: { $ne: 'draft_deleted' } }).sort({ createdAt: -1 }).lean();
 
-        // Fallback default service categories if DB is empty
-        const defaultServices = [];
+        const drafts = allServices.filter(s => s.publishStatus === 'draft');
+        const lives = allServices.filter(s => s.publishStatus === 'live');
+        
+        const liveIdsWithDraft = new Set(drafts.map(d => d.liveServiceId?.toString()).filter(Boolean));
+        
+        let adminServices = lives.filter(l => !liveIdsWithDraft.has(l._id.toString()));
+        adminServices.push(...drafts);
+        
+        adminServices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         return NextResponse.json({
             success: true,
-            categories: services.length > 0 ? services : defaultServices // keep key 'categories' for frontend compatibility if needed
+            categories: adminServices
         });
     } catch (error) {
         console.error('Fetch Services Error:', error);
@@ -39,11 +46,31 @@ export async function POST(req) {
 
         let service;
         if (id && id.length === 24) {
-            service = await Service.findByIdAndUpdate(
-                id,
-                { name, price: Number(price), category: 'General', icon, description, status: status || 'Active' },
-                { new: true }
-            );
+            const existing = await Service.findById(id);
+            if (!existing) {
+                return NextResponse.json({ success: false, message: 'Service not found' }, { status: 404 });
+            }
+            if (existing.publishStatus === 'live') {
+                const draftData = {
+                    ...existing.toObject(),
+                    _id: undefined,
+                    name, 
+                    price: Number(price), 
+                    category: 'General', 
+                    icon: icon || existing.icon, 
+                    description: description || existing.description,
+                    publishStatus: 'draft',
+                    liveServiceId: existing._id
+                };
+                delete draftData.id;
+                service = await Service.create(draftData);
+            } else {
+                service = await Service.findByIdAndUpdate(
+                    id,
+                    { name, price: Number(price), category: 'General', icon, description },
+                    { new: true }
+                );
+            }
         } else {
             service = await Service.create({
                 name,
@@ -51,7 +78,7 @@ export async function POST(req) {
                 price: Number(price),
                 icon: icon || '🛠️',
                 description: description || '',
-                status: status || 'Active'
+                publishStatus: 'draft'
             });
         }
 

@@ -1,0 +1,146 @@
+.welcome-popup-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  pointer-events: none; /* Allows clicking on the website behind it */
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 10000;
+}
+
+.welcome-popup-content {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 20px 20px 0 0;
+  padding: 16px 20px;
+  position: relative;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+  pointer-events: auto; /* Enable clicks on the bar itself */
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .welcome-popup-overlay {
+    bottom: 20px;
+  }
+  .welcome-popup-content {
+    border-radius: 16px;
+    width: 90%;
+    padding: 20px 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.welcome-popup-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.welcome-popup-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.welcome-popup-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding-right: 24px; /* for close button */
+}
+
+.welcome-popup-text {
+  font-size: 15px;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.welcome-popup-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.welcome-popup-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  color: white;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.welcome-popup-btn:active {
+  transform: scale(0.98);
+}
+
+.btn-call {
+  background-color: #3b82f6; /* Blue */
+}
+
+.btn-call:hover {
+  background-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-whatsapp {
+  background-color: #25D366; /* WhatsApp Green */
+}
+
+.btn-whatsapp:hover {
+  background-color: #1ea952;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

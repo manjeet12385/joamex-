@@ -18,12 +18,14 @@ export default function ServicePage() {
     const router = useRouter();
     const categoryKey = params.category;
     const { addToCart, cart, getCartTotal, updateQuantity } = useCart();
-    
 
+    // Strip --uid suffix if present (e.g. "hii--uid1a2b3c" → "hii")
+    // This lets same-named subcategories have unique URLs while displaying a clean title
+    const cleanSlug = categoryKey ? categoryKey.replace(/--uid[a-z0-9]+$/i, '') : categoryKey;
 
-    // Generate formatted title from slug
-    const formattedTitle = categoryKey
-      ? categoryKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    // Generate formatted title from the CLEAN slug (without uid)
+    const formattedTitle = cleanSlug
+      ? cleanSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
       : 'Service Details';
 
     // State for dynamic content
@@ -42,45 +44,14 @@ export default function ServicePage() {
     });
     const [showBannerModal, setShowBannerModal] = useState(false);
     const [isVideoMuted, setIsVideoMuted] = useState(true);
+    const [isHeaderEdited, setIsHeaderEdited] = useState(false);
 
     // Initial default categories for fallback
-    const defaultData = [
-      {
-        id: 'packages',
-        title: 'Packages & Services',
-        icon: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=100&h=100&fit=crop&q=80',
-        items: [
-          {
-            id: `${categoryKey}-basic-package`,
-            name: `Basic ${formattedTitle} Package`,
-            rating: '4.8',
-            reviews: '12K',
-            price: 499,
-            originalPrice: 699,
-            duration: '45 mins',
-            bullets: ['Professional service technician', 'Includes standard inspection & service'],
-            image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=300&h=300&fit=crop&q=80',
-            bestSeller: true
-          },
-          {
-            id: `${categoryKey}-premium-package`,
-            name: `Premium ${formattedTitle} Package`,
-            rating: '4.9',
-            reviews: '8K',
-            price: 899,
-            originalPrice: 1199,
-            badge: 'Upto 25% OFF',
-            duration: '90 mins',
-            bullets: ['Comprehensive deep service & cleaning', '30 days service warranty included'],
-            image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=300&h=300&fit=crop&q=80',
-            bestSeller: false
-          }
-        ]
-      }
-    ];
+    const defaultData = [];
 
     const [servicesList, setServicesList] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [dataLoadError, setDataLoadError] = useState(false);
     const [activeSection, setActiveSection] = useState('packages');
 
     // View Details Modal State
@@ -112,9 +83,18 @@ export default function ServicePage() {
     });
 
     const saveCategoryToDB = async (updatedHeader, updatedList) => {
+      // Prevent wipe-out if data failed to load
+      if (dataLoadError) {
+        toast.error("Cannot save: Failed to load data from database. Please refresh.");
+        return;
+      }
+      
+      // Prevent saving dummy header
+      const headerToSave = isHeaderEdited ? updatedHeader : undefined;
+
       // Sync to localStorage
-      if (updatedHeader) {
-        localStorage.setItem(`admin_service_${categoryKey}_header`, JSON.stringify(updatedHeader));
+      if (headerToSave) {
+        localStorage.setItem(`admin_service_${categoryKey}_header`, JSON.stringify(headerToSave));
       }
       if (updatedList) {
         localStorage.setItem(`admin_service_${categoryKey}_data`, JSON.stringify(updatedList));
@@ -125,7 +105,7 @@ export default function ServicePage() {
       if (targetId) {
         try {
           const payload = {};
-          if (updatedHeader) payload.headerInfo = updatedHeader;
+          if (headerToSave) payload.headerInfo = headerToSave;
           if (updatedList) payload.servicesList = updatedList;
 
           await fetch(`/api/admin/categories/${targetId}`, {
@@ -158,84 +138,32 @@ export default function ServicePage() {
           const res = await fetch(`/api/admin/categories/${categoryKey}`);
           const json = await res.json();
           if (json.success && json.category) {
+            setDataLoadError(false);
             setDbCategoryId(json.category._id);
             
-            let finalHeader = json.category.headerInfo;
-            let finalServices = json.category.servicesList;
-            let needsSync = false;
-
-            // Priority: MongoDB Database -> LocalStorage -> Fallback Defaults
+            // Priority: MongoDB Database ONLY
             if (json.category.headerInfo) {
               setHeaderInfo(json.category.headerInfo);
-            } else {
-              const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
-              if (storedHeader) {
-                try {
-                  const parsed = JSON.parse(storedHeader);
-                  if (parsed && (parsed.bannerImage === '/baglamukhi-banner.jpg' || !parsed.bannerImage)) {
-                    parsed.bannerImage = '/home-cleaning-banner.png';
-                  }
-                  setHeaderInfo(parsed);
-                  finalHeader = parsed;
-                  needsSync = true;
-                } catch(e) {}
-              }
+              setIsHeaderEdited(true);
             }
             
             if (Array.isArray(json.category.servicesList) && json.category.servicesList.length > 0) {
               setServicesList(json.category.servicesList);
             } else {
-              const storedData = localStorage.getItem(`admin_service_${categoryKey}_data`);
-              if (storedData) {
-                try {
-                  const parsed = JSON.parse(storedData);
-                  if (Array.isArray(parsed) && parsed.length > 0) {
-                    setServicesList(parsed);
-                    finalServices = parsed;
-                    needsSync = true;
-                  }
-                } catch(e) {}
-              }
+              setServicesList(defaultData);
             }
-            // Only display from DB — no auto-write to MongoDB from localStorage
           } else {
-            // Category missing in DB — only show from localStorage if available, do NOT write to MongoDB
-            const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
-            const storedData = localStorage.getItem(`admin_service_${categoryKey}_data`);
-            if (storedHeader) {
-              try {
-                const parsed = JSON.parse(storedHeader);
-                if (parsed) setHeaderInfo(parsed);
-              } catch(e) {}
-            }
-            if (storedData) {
-              try {
-                const parsed = JSON.parse(storedData);
-                if (Array.isArray(parsed) && parsed.length > 0) setServicesList(parsed);
-              } catch(e) {}
-            }
+             // Failed to find in DB
+             if (res.status !== 404) {
+               // Only block saving if it was an actual server error, not just a brand new missing category
+               setDataLoadError(true);
+             }
+             setServicesList(defaultData);
           }
         } catch (e) {
           console.error("Failed to fetch category from DB API:", e);
-          const storedHeader = localStorage.getItem(`admin_service_${categoryKey}_header`);
-          if (storedHeader) {
-            try {
-              const parsed = JSON.parse(storedHeader);
-              if (parsed && (parsed.bannerImage === '/baglamukhi-banner.jpg' || !parsed.bannerImage)) {
-                parsed.bannerImage = '/home-cleaning-banner.png';
-              }
-              setHeaderInfo(parsed);
-            } catch (err) {}
-          }
-          const storedData = localStorage.getItem(`admin_service_${categoryKey}_data`);
-          if (storedData) {
-            try {
-              const parsed = JSON.parse(storedData);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setServicesList(parsed);
-              }
-            } catch (err) {}
-          }
+          setDataLoadError(true);
+          setServicesList(defaultData);
         } finally {
           setIsDataLoaded(true);
         }
@@ -256,7 +184,25 @@ export default function ServicePage() {
 
     const handleSaveBanner = (e) => {
       e.preventDefault();
-      saveCategoryToDB(headerInfo, servicesList);
+      setIsHeaderEdited(true);
+      
+      if (dataLoadError) {
+        toast.error("Cannot save: Failed to load data from database. Please refresh.");
+        return;
+      }
+      
+      const targetId = categoryKey;
+      if (targetId) {
+        try {
+          const payload = { headerInfo: headerInfo, servicesList };
+          fetch(`/api/admin/categories/${targetId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          localStorage.setItem(`admin_service_${categoryKey}_header`, JSON.stringify(headerInfo));
+        } catch (err) {}
+      }
       setShowBannerModal(false);
       toast.success("Banner updated live!");
     };

@@ -118,10 +118,7 @@ export default function HomeRenovationSection() {
     }, []);
 
     const handleSmartCardNavigate = (e, route) => {
-      if (adminEditMode) {
-        e.preventDefault();
-        return;
-      }
+
       
       const cleanRoute = route?.trim() || '';
       
