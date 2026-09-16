@@ -36,6 +36,16 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
     details: ""
   });
 
+  const [comingSoonMsg, setComingSoonMsg] = useState("");
+
+  const showComingSoon = (name) => {
+    setComingSoonMsg(`Services for ${name} are coming soon!`);
+    setTimeout(() => {
+      setComingSoonMsg("");
+    }, 2500);
+  };
+
+
   useEffect(() => {
     const checkLocalUser = () => {
       const stored = localStorage.getItem('user');
@@ -93,6 +103,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
   const handleCloseModal = () => {
     setSelectedCategory(null);
     setSelectedPreferenceItem(null);
+    setComingSoonMsg("");
   };
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -1415,6 +1426,12 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                     )}
                   </div>
 
+                  {comingSoonMsg && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#ef4444', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: '800', marginTop: '10px', marginBottom: '12px', textAlign: 'center', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.1)' } }>
+                      {comingSoonMsg}
+                    </div>
+                  )}
+
                   {activeLinkingData && (
                     <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', color: '#047857', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', marginTop: '10px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' } }>
                       <span>🎯 Click (+) on any service below, OR link the whole category:</span>
@@ -1535,14 +1552,14 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                                 <div
                                   key={index}
                                   className="hero-subcategory-card"
-                                  style={{ position: 'relative', opacity: isDisabled ? 0.6 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer' } }
+                                  style={{ position: 'relative', cursor: 'pointer' } }
                                   onClick={() => {
                                     if (activeLinkingData) {
                                       handleLinkSubItemToOffer(null, sub);
                                       return;
                                     }
                                     if (isDisabled) {
-                                      toast.info("Services Coming Soon!");
+                                      showComingSoon(sub.name);
                                       return;
                                     }
                                     if (sub.preferences) {
@@ -1684,14 +1701,14 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                           <div
                             key={index}
                             className="hero-subcategory-card"
-                            style={{ position: 'relative', opacity: isDisabled ? 0.6 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer' } }
+                            style={{ position: 'relative', cursor: 'pointer' } }
                             onClick={() => {
                               if (activeLinkingData) {
                                 handleLinkSubItemToOffer(null, sub);
                                 return;
                               }
                               if (isDisabled) {
-                                toast.info("Services Coming Soon!");
+                                showComingSoon(sub.name);
                                 return;
                               }
                               if (sub.preferences) {
