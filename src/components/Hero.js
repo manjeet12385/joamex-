@@ -924,8 +924,31 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
       const updatedAll = { ...customCategoryData, [selectedCategory]: updatedList };
       setCustomCategoryData(updatedAll);
       localStorage.setItem('admin_custom_category_items', JSON.stringify(updatedAll));
+      
       // Save ONLY the modified category to DB to prevent overwriting other categories with stale local state
       await saveSubItemsToDB({ [selectedCategory]: updatedList });
+
+      // ALSO sync with Category model (draft) to ensure page.js can find it for saving banner/packages
+      try {
+        const catRes = await fetch('/api/admin/categories?mode=draft');
+        const catData = await catRes.json();
+        const latestCats = (catData.success && catData.categories) ? catData.categories : serviceCategories;
+        const categoriesPayload = latestCats.map(c => {
+            const cKey = c.slug || c.key || (c.name ? c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '');
+            if (cKey === selectedCategory || c.id === selectedCategory || c._id === selectedCategory) {
+                return { ...c, subcategories: updatedList };
+            }
+            return c;
+        });
+        await fetch('/api/admin/categories', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categories: categoriesPayload, sectionTitle: catData.sectionTitle || catSectionTitle })
+        });
+      } catch (err) {
+        console.error("Failed to sync deleted subcategory to Category model:", err);
+      }
+
       window.dispatchEvent(new Event('admin-categories-updated'));
     }
   };
@@ -987,6 +1010,28 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
       
       // Save ONLY the modified category to DB to prevent overwriting other categories with stale local state
       await saveSubItemsToDB({ [selectedCategory]: updatedList });
+
+      // ALSO sync with Category model (draft) to ensure page.js can find it for saving banner/packages
+      try {
+        const catRes = await fetch('/api/admin/categories?mode=draft');
+        const catData = await catRes.json();
+        const latestCats = (catData.success && catData.categories) ? catData.categories : serviceCategories;
+        const categoriesPayload = latestCats.map(c => {
+            const cKey = c.slug || c.key || (c.name ? c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '');
+            if (cKey === selectedCategory || c.id === selectedCategory || c._id === selectedCategory) {
+                return { ...c, subcategories: updatedList };
+            }
+            return c;
+        });
+        await fetch('/api/admin/categories', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categories: categoriesPayload, sectionTitle: catData.sectionTitle || catSectionTitle })
+        });
+      } catch (err) {
+        console.error("Failed to sync subcategory to Category model:", err);
+      }
+
       window.dispatchEvent(new Event('admin-categories-updated'));
       setShowSubItemModal(false);
       setSubItemForm({ name: "", icon: "", badge: "", time: "", route: "", details: "" });
