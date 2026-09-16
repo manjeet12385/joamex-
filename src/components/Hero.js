@@ -431,14 +431,25 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
           const scData = await scRes.json();
           const dbItems = scData?.data?.admin_custom_category_items;
           if (dbItems && typeof dbItems === 'object' && Object.keys(dbItems).length > 0) {
-            // Merge site-content items with subcategories from categories array (categories array takes priority for new saves)
+            // Merge site-content items with subcategories from categories array
             const mergedItems = { ...dbItems };
             catList.forEach(cat => {
               const catKey = cat.key;
-              // Only use 02_what_are_you_looking_for subcategories if the catKey is
-              // COMPLETELY ABSENT from site-content (even an empty [] means admin explicitly cleared it)
-              if (Array.isArray(cat.subcategories) && cat.subcategories.length > 0 && !(catKey in mergedItems)) {
-                mergedItems[catKey] = cat.subcategories;
+              if (Array.isArray(cat.subcategories) && cat.subcategories.length > 0) {
+                if (!(catKey in mergedItems)) {
+                  mergedItems[catKey] = cat.subcategories;
+                } else {
+                  // Merge rich fields (headerInfo, servicesList) into mergedItems
+                  mergedItems[catKey] = mergedItems[catKey].map(scItem => {
+                    const scSlug = scItem.slug || (scItem.uid ? `${scItem.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}--${scItem.uid}` : scItem.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+                    const catSub = cat.subcategories.find(cs => cs.slug === scSlug || cs.name === scItem.name);
+                    return {
+                      ...scItem,
+                      headerInfo: (catSub && catSub.headerInfo) ? catSub.headerInfo : scItem.headerInfo,
+                      servicesList: (catSub && catSub.servicesList) ? catSub.servicesList : scItem.servicesList
+                    };
+                  });
+                }
               }
             });
             setCustomCategoryData(mergedItems);
@@ -1088,7 +1099,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                       className={`justdial-slide ${idx === currentSlide ? 'active' : ''} ${isOnlyPhoto ? 'only-photo' : ''}`}
                       onClick={() => { if (slide.route && slide.route !== '#') { router.push(slide.route) } }}
                     >
-                      {slide.image ? <img src={slide.image} alt={slide.title} /> : (adminEditMode && <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:'16px'}}>Empty Slide - Click Edit</div>)}
+                      {slide.image ? <img src={slide.image} alt={slide.title} fetchPriority={idx === 0 ? "high" : "auto"} loading={idx === 0 ? "eager" : "lazy"} /> : (adminEditMode && <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:'16px'}}>Empty Slide - Click Edit</div>)}
                       {!isOnlyPhoto && (
                         <div className="slide-gradient-overlay">
                           {slide.badge && <span className="slide-top-badge">{slide.badge}</span>}
@@ -1172,7 +1183,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                         </button>
                       )}
                       <div className="jd-card-image-box">
-                        {card.image ? <img src={card.image} alt={card.title} /> : (adminEditMode && <div style={{width:'100%', height:'100%', backgroundColor:'#1e293b', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:'12px'}}>Empty Card</div>)}
+                        {card.image ? <img src={card.image} alt={card.title} fetchPriority="high" loading="eager" /> : (adminEditMode && <div style={{width:'100%', height:'100%', backgroundColor:'#1e293b', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:'12px'}}>Empty Card</div>)}
                         {!isOnlyPhoto && card.badge && <span className="jd-card-badge">{card.badge}</span>}
                       </div>
                       {!isOnlyPhoto && (
@@ -1309,7 +1320,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                       )}
                       <div className="service-icon">
                         {isImg ? (
-                          <img src={service.image} alt={service.label || service.name} className="service-category-img" />
+                          <img src={service.image} alt={service.label || service.name} className="service-category-img" loading="lazy" />
                         ) : (
                           <span style={{ fontSize: '1.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' } }>
                             {service.icon || service.image || '⚡'}
@@ -1435,7 +1446,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                     <div className="hero-preferences-list">
                       {selectedPreferenceItem.bannerImage && (
                         <div className="hero-preference-banner">
-                          <img src={selectedPreferenceItem.bannerImage} alt={selectedPreferenceItem.name} />
+                          <img src={selectedPreferenceItem.bannerImage} alt={selectedPreferenceItem.name} loading="lazy" />
                         </div>
                       )}
                       {selectedPreferenceItem.preferences.map((pref, pIdx) => (
@@ -1481,7 +1492,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                             </button>
                           )}
                           <div className="preference-img-wrapper">
-                            <img src={pref.image} alt={pref.name} />
+                            <img src={pref.image} alt={pref.name} loading="lazy" />
                           </div>
                           <div className="preference-details">
                             <h4>{pref.name}</h4>
@@ -1516,14 +1527,22 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                                 : sub.uid
                                   ? `/services/${nameSlug}--${sub.uid}`
                                   : `/services/${nameSlug}`;
+
+                              const hasData = (sub.servicesList && sub.servicesList.length > 0) || (sub.headerInfo && sub.headerInfo.bannerImage);
+                              const isDisabled = !adminEditMode && !hasData;
+
                               return (
                                 <div
                                   key={index}
                                   className="hero-subcategory-card"
-                                  style={{ position: 'relative' } }
+                                  style={{ position: 'relative', opacity: isDisabled ? 0.6 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer' } }
                                   onClick={() => {
                                     if (activeLinkingData) {
                                       handleLinkSubItemToOffer(null, sub);
+                                      return;
+                                    }
+                                    if (isDisabled) {
+                                      toast.info("Services Coming Soon!");
                                       return;
                                     }
                                     if (sub.preferences) {
