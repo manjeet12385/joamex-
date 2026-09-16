@@ -189,8 +189,23 @@ export default function Footer() {
       )}
 
       {/* COPYRIGHT */}
-      <div className="footer-bottom">
-        © 2026 Joamex | All Rights Reserved
+      <div className="footer-bottom" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+        <div>© 2026 Joamex | All Rights Reserved</div>
+        <div style={{ fontSize: '14px' }}>
+          managed by{' '}
+          <a 
+            href="https://indianexportwebmart.com/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ 
+              color: '#000000', 
+              fontWeight: 'bold', 
+              textDecoration: 'none' 
+            }}
+          >
+            Indian Export Webmart
+          </a>
+        </div>
       </div>
 
     </footer>
