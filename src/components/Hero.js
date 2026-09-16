@@ -1528,7 +1528,7 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                                   ? `/services/${nameSlug}--${sub.uid}`
                                   : `/services/${nameSlug}`;
 
-                              const hasData = (sub.servicesList && sub.servicesList.length > 0) || (sub.headerInfo && sub.headerInfo.bannerImage);
+                              const hasData = (sub.headerInfo && sub.headerInfo.bannerImage) || (sub.servicesList && sub.servicesList.some(s => s.items && s.items.length > 0)) || (sub.servicesList && sub.servicesList.length > 0 && !sub.servicesList[0].items);
                               const isDisabled = !adminEditMode && !hasData;
 
                               return (
@@ -1676,14 +1676,22 @@ export default function Hero({ forceLive = false, isDraftModeComponent = false }
                           : sub.uid
                             ? `/services/${nameSlug}--${sub.uid}`
                             : `/services/${nameSlug}`;
+
+                        const hasData = (sub.headerInfo && sub.headerInfo.bannerImage) || (sub.servicesList && sub.servicesList.some(s => s.items && s.items.length > 0)) || (sub.servicesList && sub.servicesList.length > 0 && !sub.servicesList[0].items);
+                        const isDisabled = !adminEditMode && !hasData;
+
                         return (
                           <div
                             key={index}
                             className="hero-subcategory-card"
-                            style={{ position: 'relative' } }
+                            style={{ position: 'relative', opacity: isDisabled ? 0.6 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer' } }
                             onClick={() => {
                               if (activeLinkingData) {
                                 handleLinkSubItemToOffer(null, sub);
+                                return;
+                              }
+                              if (isDisabled) {
+                                toast.info("Services Coming Soon!");
                                 return;
                               }
                               if (sub.preferences) {
